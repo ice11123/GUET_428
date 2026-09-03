@@ -12,7 +12,7 @@ interface Props {
   title: string;
   description: string;
   image?: string | ImageMetadata;
-  sidebarMode?: 'overview' | 'article';
+  sidebarMode?: 'overview' | 'article' | 'hidden';
   currentSlug?: string;
   currentDir1?: string;
   currentDir2?: string;
@@ -27,7 +27,8 @@ const {
   currentDir1 = '',
   currentDir2 = '',
 } = Astro.props;
-const sidebarPosts = await getSidebarData();
+const showSidebar = sidebarMode !== 'hidden';
+const sidebarPosts = showSidebar ? await getSidebarData() : [];
 ---
 
 <html lang="zh-cn">
@@ -37,13 +38,15 @@ const sidebarPosts = await getSidebarData();
   </head>
   <body class="public-shell">
     <Header />
-    <div class:list={['public-layout-frame', { 'has-article-toc': sidebarMode === 'article' }]}>
-      <PersistentSidebar
-        posts={sidebarPosts}
-        currentSlug={currentSlug}
-        currentDir1={currentDir1}
-        currentDir2={currentDir2}
-      />
+    <div class:list={['public-layout-frame', { 'has-article-toc': sidebarMode === 'article', 'without-sidebar': !showSidebar }]}>
+      {showSidebar && (
+        <PersistentSidebar
+          posts={sidebarPosts}
+          currentSlug={currentSlug}
+          currentDir1={currentDir1}
+          currentDir2={currentDir2}
+        />
+      )}
       <main class="public-main">
         <slot />
       </main>
@@ -80,6 +83,10 @@ const sidebarPosts = await getSidebarData();
 
   .public-layout-frame.has-article-toc {
     grid-template-columns: 248px minmax(0, 1fr) 236px;
+  }
+
+  .public-layout-frame.without-sidebar {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   @media (max-width: 1199px) and (min-width: 1000px) {

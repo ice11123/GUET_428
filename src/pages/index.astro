@@ -71,7 +71,7 @@ const maintenanceEntries = await parseMaintenance(maintenanceSource);
 const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
 ---
 
-<PublicLayout title={SITE_TITLE} description={SITE_DESCRIPTION} image={homeHeroImage}>
+<PublicLayout title={SITE_TITLE} description={SITE_DESCRIPTION} image={homeHeroImage} sidebarMode="hidden">
   <JsonLd slot="head" data={websiteLd} />
 
   <div class="home-page">
@@ -284,20 +284,22 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
       </div>
 
       <div class="info-folds">
-        <details class="info-fold maintenance-fold" open>
-          <summary><span>03</span><strong>近期维护公告</strong><small>查看最近的功能调整与修复</small></summary>
-          <div class="maintenance-list">
-            {recentMaintenanceEntries.map((entry, index) => (
-              <details class="maintenance-entry" open={index === 0}>
-                <summary><time datetime={entry.date}>{entry.date}</time><span>{entry.title}</span></summary>
-                <div class="maintenance-body" set:html={entry.html}></div>
-              </details>
-            ))}
-            {maintenanceEntries.length > recentMaintenanceEntries.length && (
-              <a class="maintenance-archive-link" href={withBase('/maintenance/')}>查看全部 {maintenanceEntries.length} 条维护记录 →</a>
-            )}
-          </div>
-        </details>
+        {maintenanceEntries.length > 0 && (
+          <details class="info-fold maintenance-fold" open>
+            <summary><span>03</span><strong>近期维护公告</strong><small>查看最近的功能调整与修复</small></summary>
+            <div class="maintenance-list">
+              {recentMaintenanceEntries.map((entry, index) => (
+                <details class="maintenance-entry" open={index === 0}>
+                  <summary><time datetime={entry.date}>{entry.date}</time><span>{entry.title}</span></summary>
+                  <div class="maintenance-body" set:html={entry.html}></div>
+                </details>
+              ))}
+              {maintenanceEntries.length > recentMaintenanceEntries.length && (
+                <a class="maintenance-archive-link" href={withBase('/maintenance/')}>查看全部 {maintenanceEntries.length} 条维护记录 →</a>
+              )}
+            </div>
+          </details>
+        )}
 
       </div>
     </section>
@@ -459,13 +461,13 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
     animation-play-state: paused;
   }
   .cover-wave-layer-back {
-    fill: color-mix(in srgb, var(--canvas) 72%, var(--accent) 28%);
+    fill: color-mix(in srgb, var(--canvas) 72%, var(--accent-tertiary) 28%);
     opacity: .58;
     animation-duration: 12s;
     animation-delay: -2s;
   }
   .cover-wave-layer-middle {
-    fill: color-mix(in srgb, var(--canvas) 84%, var(--accent) 16%);
+    fill: color-mix(in srgb, var(--canvas) 84%, var(--accent-tertiary) 16%);
     opacity: .76;
     animation-duration: 7s;
     animation-delay: -3s;

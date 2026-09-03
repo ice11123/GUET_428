@@ -16,15 +16,19 @@ const entries = await parseMaintenance(maintenanceSource);
     </header>
 
     <div class="maintenance-timeline">
-      {entries.map((entry, index) => (
-        <details class="maintenance-record" open={index === 0}>
-          <summary>
-            <time datetime={entry.date}>{entry.date}</time>
-            <span>{entry.title}</span>
-          </summary>
-          <div class="maintenance-body" set:html={entry.html}></div>
-        </details>
-      ))}
+      {entries.length > 0 ? (
+        entries.map((entry, index) => (
+          <details class="maintenance-record" open={index === 0}>
+            <summary>
+              <time datetime={entry.date}>{entry.date}</time>
+              <span>{entry.title}</span>
+            </summary>
+            <div class="maintenance-body" set:html={entry.html}></div>
+          </details>
+        ))
+      ) : (
+        <p class="maintenance-empty">暂无维护记录。</p>
+      )}
     </div>
   </section>
 </PublicLayout>
@@ -36,6 +40,7 @@ const entries = await parseMaintenance(maintenanceSource);
   h1 { margin: 0; color: var(--text-primary); font-size: clamp(2rem, 6vw, 3.5rem); }
   header > p:last-child { color: var(--text-secondary); }
   .maintenance-timeline { border-top: 1px solid var(--border); }
+  .maintenance-empty { margin: 0; padding: 24px 4px; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
   .maintenance-record { border-bottom: 1px solid var(--border); content-visibility: auto; contain-intrinsic-size: auto 72px; }
   .maintenance-record > summary { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 18px; padding: 20px 4px; color: var(--text-primary); cursor: pointer; list-style: none; }
   .maintenance-record > summary::-webkit-details-marker { display: none; }

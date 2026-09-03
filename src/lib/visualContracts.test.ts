@@ -51,6 +51,8 @@ test('全局动效令牌与降低动态契约保持稳定', () => {
   assert.match(home, /cover-wave-layer-back[\s\S]*animation-duration:\s*12s/);
   assert.match(home, /cover-wave-layer-middle[\s\S]*animation-duration:\s*7s/);
   assert.match(home, /cover-wave-layer-front[\s\S]*animation-duration:\s*4s/);
+  assert.match(home, /cover-wave-layer-back[\s\S]*var\(--accent-tertiary\)/);
+  assert.match(home, /cover-wave-layer-middle[\s\S]*var\(--accent-tertiary\)/);
   assert.match(home, /@keyframes cover-wave-drift\s*\{[\s\S]*translate3d\(-96px,[\s\S]*translate3d\(0,/);
   assert.doesNotMatch(home, /cover-wave-layer[^}]*filter:/);
 });
@@ -185,13 +187,15 @@ test('顶部栏背景全宽且导航内容保持居中约束', () => {
   assert.doesNotMatch(header, /@media\s*\(max-width:\s*999px\)[\s\S]*header\s*\{[\s\S]*backdrop-filter:\s*none/);
 });
 
-test('主页复用统一侧栏并移除高饱和巨大字占位', () => {
+test('主页默认隐藏统一侧栏并移除高饱和巨大字占位', () => {
   const home = readSource('pages/index.astro');
   const layout = readSource('layouts/PublicLayout.astro');
   const sidebar = readSource('components/layout/PersistentSidebar.astro');
 
   assert.doesNotMatch(home, /HomeSidebar/);
-  assert.match(layout, /<PersistentSidebar/);
+  assert.match(home, /sidebarMode="hidden"/);
+  assert.match(layout, /showSidebar\s*&&\s*\([\s\S]*<PersistentSidebar/);
+  assert.match(layout, /without-sidebar[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   assert.match(layout, /grid-template-columns:\s*248px minmax\(0,\s*1fr\)/);
   assert.match(home, /class="document-preview"/);
   assert.doesNotMatch(home, /cover-letter|cover-grid|--cover-hue|home-intro/);
@@ -339,9 +343,11 @@ test('GUET_428 未配置旧 Worker 且云端写入保持关闭', () => {
 test('首页维护记录有固定上限并提供完整归档页', () => {
   const home = readSource('pages/index.astro');
   const archive = readSource('pages/maintenance.astro');
+  const maintenance = readSource('content/maintenance.md');
 
   assert.match(home, /maintenanceEntries\.slice\(0, 5\)/);
   assert.match(home, /withBase\('\/maintenance\/'\)/);
   assert.match(archive, /parseMaintenance\(maintenanceSource\)/);
   assert.match(archive, /entries\.map/);
+  assert.doesNotMatch(maintenance, /GUET_428 实验室博客建立|从现有博客/);
 });
