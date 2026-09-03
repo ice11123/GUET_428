@@ -111,7 +111,7 @@ test('左侧栏移除个人资料并保留目录、标签目录，文章 TOC 独
   assert.match(interaction, /aria-selected/);
 });
 
-test('实验室身份替代个人元素，亮色主题同时保留红金并加入工程蓝', () => {
+test('实验室身份替代个人元素，亮色主题采用浅蓝底并保留红金蓝强调色', () => {
   const constants = readSource('consts.ts');
   const home = readSource('pages/index.astro');
   const header = readSource('components/layout/Header.astro');
@@ -123,6 +123,9 @@ test('实验室身份替代个人元素，亮色主题同时保留红金并加�
   assert.match(home, /lab-hero\.png/);
   assert.doesNotMatch(home, /GitHubContributions|GitHubLanguages|PERSONAL NOTES|离子怪/);
   assert.doesNotMatch(header, /SocialLinks/);
+  assert.match(lightTheme, /--background:\s*#eef6ff/);
+  assert.match(lightTheme, /--background-dark:\s*#f8fbff/);
+  assert.doesNotMatch(lightTheme, /#fffaf3|#fffdf8|#f7ead8/);
   assert.match(lightTheme, /--accent:\s*#a61f2b/);
   assert.match(lightTheme, /--accent-secondary:\s*#c4933b/);
   assert.match(lightTheme, /--accent-tertiary:\s*#245b9e/);
