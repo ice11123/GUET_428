@@ -1,0 +1,261 @@
+---
+import { getSearchData } from '../../lib/blogData';
+import Icon from '../ui/Icon.astro';
+
+const searchData = await getSearchData();
+---
+
+<script is:inline define:vars={{ searchData }}>
+  window.__SEARCH_DATA__ = searchData;
+</script>
+
+<dialog id="search-modal" class="search-modal" aria-label="搜索文章">
+  <div class="search-modal-content">
+    <div class="search-input-wrapper">
+      <span class="search-input-icon"><Icon name="search" /></span>
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="搜索文章..."
+        autocomplete="off"
+        aria-label="搜索文章"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls="search-results"
+        aria-expanded="false"
+      />
+      <button id="search-close-btn" class="search-close-btn" aria-label="关闭搜索" type="button">
+        <Icon name="close" />
+      </button>
+    </div>
+    <ul id="search-results" class="search-results" role="listbox" aria-label="搜索结果" aria-live="polite">
+    </ul>
+  </div>
+</dialog>
+
+<script src="../../scripts/search"></script>
+
+<style>
+  .search-modal {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0;
+    max-width: 600px;
+    width: 90vw;
+    color: var(--foreground);
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .search-modal::backdrop {
+    background: rgba(var(--backdrop-rgb), 0.8);
+    backdrop-filter: blur(4px);
+  }
+
+  .search-modal[data-open-source='pointer'] {
+    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+
+    @starting-style {
+      opacity: 0;
+      transform: translateY(-12px) scale(0.97);
+    }
+  }
+
+  .search-modal[data-open-source='pointer']::backdrop {
+    opacity: 1;
+    transition: opacity 150ms var(--ease-out);
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  .search-modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh;
+  }
+
+  .search-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--background);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .search-input-icon {
+    color: var(--foreground-dark);
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--foreground);
+    font-size: 1.1rem;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .search-input::placeholder {
+    color: var(--foreground-dark);
+  }
+
+  .search-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--foreground-dark);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    transition: transform 140ms var(--ease-out), color var(--transition-fast), background var(--transition-fast);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .search-close-btn:hover {
+      color: var(--foreground);
+      background: var(--background-light);
+    }
+
+    :global(.search-result-item:hover) {
+      border-left-color: var(--accent);
+      background: var(--background-light);
+    }
+  }
+
+  .search-close-btn:active { transform: scale(0.97); }
+
+  .search-results {
+    list-style: none;
+    padding: 0.5rem 0;
+    margin: 0;
+    overflow-y: auto;
+    max-height: 400px;
+  }
+
+  :global(.search-result-item) {
+    border-left: 3px solid transparent;
+    border-bottom: 1px solid var(--border);
+    margin: 0;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  :global(.search-result-item:last-child) {
+    border-bottom: none;
+  }
+
+  :global(.search-result-item.selected) {
+    border-left-color: var(--accent);
+    background: var(--background-light);
+  }
+
+  :global(.search-result-link) {
+    display: block;
+    padding: 1.25rem 1.75rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  :global(.search-result-title) {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--foreground);
+    margin-bottom: 0.4rem;
+    line-height: 1.5;
+  }
+
+  :global(.search-result-category) {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.12);
+    padding: 2px 10px;
+    border-radius: 999px;
+    margin-bottom: 0.45rem;
+    letter-spacing: 0.03em;
+  }
+
+  :global(.search-result-desc) {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--foreground-dark);
+    opacity: 0.55;
+    line-height: 1.6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :global(.search-highlight) {
+    color: var(--accent-light);
+    background: rgba(var(--accent-rgb), 0.2);
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+
+  :global(.search-no-results) {
+    padding: 3rem 1.75rem;
+    text-align: center;
+    color: var(--foreground-dark);
+    font-size: 0.95rem;
+  }
+
+  /* Scrollbar */
+  .search-results::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .search-results::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .search-results::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .search-modal {
+      max-width: none;
+      width: 95vw;
+      margin-top: 6vh;
+      align-self: flex-start;
+    }
+
+    .search-modal-content {
+      max-height: 65vh;
+    }
+
+    .search-input {
+      font-size: 16px; /* Prevent iOS zoom */
+    }
+
+    .search-input-wrapper {
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .search-modal,
+    .search-modal::backdrop,
+    .search-close-btn {
+      transition-duration: 0ms !important;
+      transform: none;
+    }
+  }
+</style>

@@ -1,0 +1,86 @@
+---
+// 仓库语言构成 — SVG 饼图
+interface LangStat {
+  name: string;
+  lines: number;
+  percentage: number;
+  color: string;
+}
+
+interface Props {
+  languages: LangStat[];
+  totalLines: number;
+}
+
+const { languages, totalLines } = Astro.props;
+const hasData = languages.length > 0 && totalLines > 0;
+
+const PI = Math.PI;
+const CX = 100, CY = 100, R = 85, INNER_R = 48;
+
+function slicePath(startAngle: number, endAngle: number): string {
+  const x1 = CX + R * Math.cos(startAngle);
+  const y1 = CY + R * Math.sin(startAngle);
+  const x2 = CX + R * Math.cos(endAngle);
+  const y2 = CY + R * Math.sin(endAngle);
+  const large = endAngle - startAngle > PI ? 1 : 0;
+  return `M${CX},${CY} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
+}
+
+let currentAngle = -PI / 2;
+const slices = languages.map((lang) => {
+  const sliceAngle = (lang.percentage / 100) * 2 * PI;
+  const start = currentAngle;
+  currentAngle += sliceAngle;
+  return { ...lang, path: slicePath(start, currentAngle) };
+});
+
+function fmt(n: number): string {
+  return n >= 10000 ? (n / 10000).toFixed(1) + '万' : String(n);
+}
+---
+
+<div class="lang-card stat-card">
+  <div class="lang-title">本网站仓库语言构成</div>
+  {hasData ? (
+    <div class="lang-chart-row">
+      <svg class="lang-pie" viewBox="0 0 200 200" aria-label="仓库语言构成饼图">
+        {slices.map((s) => (
+          <path d={s.path} fill={s.color} stroke="var(--background)" stroke-width="1.5">
+            <title>{s.name}: {fmt(s.lines)} 行 ({s.percentage}%)</title>
+          </path>
+        ))}
+        <circle cx={CX} cy={CY} r={INNER_R} fill="var(--background)" />
+      </svg>
+      <div class="lang-legend">
+        {slices.map((s) => (
+          <div class="lang-legend-item">
+            <span class="lang-legend-dot" style={`background:${s.color};`}></span>
+            <span class="lang-legend-name">{s.name}</span>
+            <span class="lang-legend-pct">{s.percentage}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <div class="lang-empty">暂无数据</div>
+  )}
+  <div class="lang-total">共 {fmt(totalLines)} 行</div>
+</div>
+
+<style>
+  .lang-card {
+    padding: 1.5rem;
+    margin: 0 auto;
+    max-width: 760px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .lang-title {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--foreground-dark);
+    margin-bottom: 1rem;
+  }
+</style>

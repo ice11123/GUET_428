@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "test": "node --test test/index.test.js",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.29.0"
+  }
+}

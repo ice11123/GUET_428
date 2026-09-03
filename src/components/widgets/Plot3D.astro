@@ -1,0 +1,63 @@
+---
+interface Props {
+  type?: 'line' | 'surface';
+  xEquation?: string;
+  yEquation?: string;
+  zEquation?: string;
+  xSurface?: string;
+  ySurface?: string;
+  zSurface?: string;
+  uStart?: number;
+  uEnd?: number;
+  vStart?: number;
+  vEnd?: number;
+  tStart?: number;
+  tEnd?: number;
+  points?: number;
+  title?: string;
+  color?: string;
+  width?: number;
+  height?: number;
+}
+
+const {
+  type = 'line', xEquation = 'Math.cos(t)', yEquation = 'Math.sin(t)', zEquation = 't',
+  xSurface = 'u * Math.cos(v)', ySurface = 'u * Math.sin(v)', zSurface = 'v',
+  uStart = 0, uEnd = 2, vStart = 0, vEnd = 2 * Math.PI,
+  tStart = 0, tEnd = 4 * Math.PI, points = 150, color = '#1f77b4',
+  width = 600, height = 400,
+} = Astro.props;
+
+const config = {
+  type, xEquation, yEquation, zEquation, xSurface, ySurface, zSurface,
+  uStart, uEnd, vStart, vEnd, tStart, tEnd, points, color,
+};
+---
+
+<div
+  class="plot-container"
+  data-plot3d
+  data-plot-config={JSON.stringify(config)}
+  aria-label="三维交互图形"
+  style={{
+    width: '100%', maxWidth: `${width}px`, height: `${height}px`,
+    margin: '1rem 0', border: '1px solid var(--plot-border)',
+  }}
+></div>
+
+<style>
+  @media (max-width: 640px) {
+    .plot-container { height: auto !important; aspect-ratio: 3/4; }
+  }
+  .plot-container.plot-load-error {
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    color: var(--foreground-dark);
+    text-align: center;
+    font-size: 0.85rem;
+  }
+</style>
+
+<script src="../../scripts/plot3d.ts"></script>

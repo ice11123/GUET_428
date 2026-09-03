@@ -1,0 +1,344 @@
+---
+import { getCollection } from 'astro:content';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+import HtmlHead from '../../components/layout/HtmlHead.astro';
+import katexCss from 'katex/dist/katex.min.css?url';
+import { ADMIN_SYNC_API_URL, CLOUD_PUBLISH_ENABLED, SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import type { AdminPostDraft } from '../../lib/adminDrafts';
+import { resolveDirs } from '../../lib/utils';
+
+const posts = await getCollection('blog');
+const initialDrafts: AdminPostDraft[] = posts.map((post) => {
+  const dirs = resolveDirs(post);
+  const format = post.id.endsWith('.md') ? 'md' : 'mdx';
+  const publishedId = /\.(?:md|mdx)$/i.test(post.id) ? post.id : `${post.id}.${format}`;
+  return {
+    id: post.id,
+    title: post.data.title,
+    description: post.data.description,
+    pubDate: post.data.pubDate.toISOString().slice(0, 10),
+    updatedDate: post.data.updatedDate?.toISOString().slice(0, 10),
+    dir1: dirs.dir1,
+    dir2: dirs.dir2,
+    tags: post.data.tags ?? [],
+    body: post.body ?? '',
+    format,
+    publishedPath: `src/content/blog/${publishedId}`,
+    localEditedAt: undefined,
+  };
+});
+
+const systemCards = [
+  ['frontend', '管理台前端', '等待页面初始化'],
+  ['storage', '本地草稿存储', '等待存储检测'],
+  ['worker', 'Cloudflare Worker', '等待连接检测'],
+  ['github', 'GitHub 授权', '解锁后检测'],
+  ['repository', '目标仓库', '解锁后检测'],
+  ['deployment', 'GitHub Pages', '解锁后检测'],
+];
+---
+
+<html lang="zh-cn">
+  <head>
+    <HtmlHead title={`管理台 - ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+    <link rel="stylesheet" href={katexCss} />
+    <meta name="robots" content="noindex,nofollow" />
+  </head>
+  <body class="admin-page">
+    <Header />
+    <main class="admin-shell">
+      <section id="admin-app" data-initial-drafts={JSON.stringify(initialDrafts)} data-sync-endpoint={ADMIN_SYNC_API_URL} data-publish-enabled={String(CLOUD_PUBLISH_ENABLED)}>
+        <div class="admin-overview">
+          <section class="admin-intro">
+            <p class="admin-kicker">ADMIN PROTOTYPE</p>
+            <h1>博客管理台</h1>
+            <p class="admin-description">编辑网站中的文章、标签和目录，保存本地草稿，并通过 GitHub 授权发布到正式网站。</p>
+            <div class="admin-warning" role="note">
+              <strong>安全提示</strong>
+              <span>隐藏入口和站内密码只是界面门槛。正式发布由 GitHub OAuth、HttpOnly 会话、Origin 与 CSRF 校验共同保护；本地草稿仍只保存在当前浏览器。</span>
+            </div>
+            <div class="admin-howto" aria-label="管理台操作说明">
+              <p class="admin-howto-title">操作流程</p>
+              <div class="admin-howto-grid">
+                <div><strong>1</strong><span>从目录树选择文章</span></div>
+                <div><strong>2</strong><span>修改正文和元数据</span></div>
+                <div><strong>3</strong><span>保存草稿并检查预览</span></div>
+                <div><strong>4</strong><span>授权后发布到正式网站</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="system-status" aria-labelledby="system-status-title" aria-live="polite">
+            <div class="system-status-heading">
+              <div>
+                <p class="status-eyebrow">PUBLISHING PIPELINE</p>
+                <h2 id="system-status-title">系统状态</h2>
+              </div>
+              <button type="button" class="status-refresh" data-status-refresh>
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                重新检测
+              </button>
+            </div>
+            <div class="system-status-grid">
+              {systemCards.map(([key, title, initial], index) => (
+                <article class="system-card" data-system-card={key} data-state={index < 3 ? 'checking' : 'waiting'}>
+                  <header><span class="system-dot"></span><strong>{title}</strong><span data-card-state>{index < 3 ? '检测中' : '等待'}</span></header>
+                  <p data-card-value>{initial}</p>
+                  <small data-card-detail>请稍候</small>
+                  <a data-card-link hidden target="_blank" rel="noopener noreferrer">查看详情</a>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div class="admin-locked" data-locked>
+          <h2>管理台已锁定</h2>
+          <p>请从顶部站名连续点击 5 次，或使用下方按钮输入管理密码。</p>
+          <button type="button" class="unlock-button" data-admin-open>输入管理密码</button>
+        </div>
+
+        <div class="admin-editor" data-editor hidden>
+          <div class="admin-toolbar">
+            <button type="button" class="tree-mobile-trigger" data-tree-open aria-label="打开文章目录">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              文章目录
+            </button>
+            <div class="toolbar-status">
+              <strong data-status>未保存</strong>
+              <span class="admin-muted" data-count></span>
+            </div>
+            <div class="admin-actions">
+              <button type="button" data-new>新建文章</button>
+              <button type="button" data-reset>恢复仓库内容</button>
+              <button type="button" data-export>导出当前文件</button>
+              <button type="button" class="sync-button" data-cloud-publish disabled title="GUET_428 尚未接入独立云端发布服务">发布到正式网站（暂未启用）</button>
+            </div>
+          </div>
+
+          <div class="admin-layout">
+            <aside class="admin-tree-panel" data-tree-drawer aria-label="文章目录">
+              <div class="tree-panel-heading">
+                <strong>文章目录</strong>
+                <button type="button" data-tree-close aria-label="关闭文章目录">×</button>
+              </div>
+              <label class="admin-search-label" for="admin-search">筛选文章</label>
+              <input id="admin-search" type="search" placeholder="标题、标签或分类" data-search />
+              <div class="admin-mode-toggle" data-tree-mode-toggle>
+                <button type="button" class="active" data-tree-mode="directory">目录结构</button>
+                <button type="button" data-tree-mode="tag">标签分类</button>
+              </div>
+              <div class="admin-tree-scroll" data-tree-scroll>
+                <ul class="admin-tree" data-post-tree></ul>
+              </div>
+            </aside>
+            <div class="admin-tree-backdrop" data-tree-backdrop></div>
+
+            <section class="admin-edit-column">
+              <div class="current-article-identity">
+                <span data-current-type>正在编辑文章</span>
+                <code data-current-path></code>
+              </div>
+              <form class="admin-form" data-form>
+                <div class="form-grid">
+                  <label>标题<input name="title" required /></label>
+                  <label>发布日期<input name="pubDate" type="date" required /></label>
+                  <label class="wide">描述<textarea name="description" rows="2" required></textarea></label>
+                  <label>一级目录<input name="dir1" placeholder="例如：数学" /></label>
+                  <label>二级目录<input name="dir2" placeholder="可选" /></label>
+                  <label class="wide">标签<input name="tags" placeholder="使用逗号分隔，例如：Astro, 数学" /></label>
+                  <label>文件格式<select name="format"><option value="mdx">MDX</option><option value="md">Markdown</option></select></label>
+                  <label>草稿 ID<input name="id" readonly /></label>
+                </div>
+                <label class="body-label">正文（Markdown / MDX）<textarea name="body" rows="22" required></textarea></label>
+                <div class="form-actions">
+                  <button type="submit" class="primary">保存本地草稿</button>
+                  <button type="button" data-delete>删除当前文章</button>
+                  <span class="edited-at" data-edited-at>尚未修改</span>
+                </div>
+                <p class="sync-hint">当前为视觉实验版，仅支持本地草稿与导出；云端发布已禁用，不会请求 OAuth、Worker 或 GitHub 写接口。</p>
+              </form>
+            </section>
+
+            <article class="admin-preview" aria-live="polite">
+              <div class="preview-heading"><span>实时预览</span><span class="admin-muted" data-preview-status>等待预览</span></div>
+              <div class="preview-body" data-preview></div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+    <Footer />
+    <script src="../../scripts/admin-dashboard.ts"></script>
+  </body>
+</html>
+
+<style is:global>
+  .admin-page,
+  .admin-page *,
+  .admin-page *::before,
+  .admin-page *::after { box-sizing: border-box; }
+  .admin-page { overflow-x: hidden; background: var(--background); }
+  .admin-shell { width: min(1880px, calc(100% - 3.5rem)); margin: 0 auto 3rem; }
+  .admin-overview { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(420px, .85fr); gap: 1rem; align-items: stretch; margin: 1rem 0 1.25rem; }
+  .admin-intro, .system-status, .admin-locked, .admin-toolbar, .admin-tree-panel, .admin-form, .admin-preview, .current-article-identity { border: 1px solid var(--border); background: color-mix(in srgb, var(--background-dark) 88%, transparent); }
+  .admin-intro, .system-status { padding: 1.15rem 1.25rem; border-radius: var(--radius-xl); }
+  .admin-kicker, .status-eyebrow { margin: 0; color: var(--accent); font-size: .7rem; font-weight: 650; letter-spacing: .15em; }
+  .admin-intro h1 { margin: .2rem 0 .45rem; font-size: clamp(1.75rem, 3vw, 2.35rem); }
+  .admin-description { margin: 0 0 .9rem; color: var(--foreground-dark); line-height: 1.6; }
+  .admin-warning { display: grid; grid-template-columns: auto 1fr; gap: .55rem; padding: .75rem .85rem; border: 1px solid var(--alert-note-border); border-radius: var(--radius-lg); background: var(--alert-note-bg); font-size: .82rem; line-height: 1.55; }
+  .admin-warning strong { color: var(--alert-note); }
+  .admin-howto { margin-top: .75rem; padding: .75rem .85rem; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--background) 58%, transparent); }
+  .admin-howto-title { margin: 0 0 .55rem; color: var(--accent); font-size: .76rem; font-weight: 650; }
+  .admin-howto-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem .7rem; min-width: 0; }
+  .admin-howto-grid > div { display: grid; grid-template-columns: 1.35rem minmax(0, 1fr); align-items: start; gap: .35rem; min-width: 0; color: var(--foreground-dark); font-size: .72rem; line-height: 1.45; }
+  .admin-howto-grid strong { display: grid; place-items: center; width: 1.25rem; height: 1.25rem; color: var(--background); background: var(--accent); border-radius: 50%; font-size: .68rem; }
+  .admin-howto-grid span { min-width: 0; overflow-wrap: anywhere; }
+  .admin-locked { max-width: 520px; margin: 2rem auto; padding: 1.6rem; text-align: center; border-radius: var(--radius-xl); }
+  .admin-locked h2, .admin-locked p { margin: 0; }
+  .admin-locked p { margin-top: .55rem; color: var(--foreground-dark); }
+  .unlock-button, .admin-actions button, .form-actions button, .tree-mobile-trigger { min-height: 2.25rem; padding: .5rem .78rem; color: var(--foreground); background: transparent; border: 1px solid var(--border); border-radius: var(--radius-lg); font: inherit; cursor: pointer; transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast); }
+  .unlock-button { margin-top: 1rem; color: var(--background); background: var(--accent); border-color: var(--accent); font-weight: 650; }
+  .admin-toolbar { display: flex; align-items: center; gap: .75rem; margin-bottom: .8rem; padding: .7rem .8rem; border-radius: var(--radius-xl); }
+  .toolbar-status { display: flex; gap: .45rem; align-items: baseline; }
+  .admin-actions, .form-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .admin-actions { margin-left: auto; }
+  .admin-actions button:hover, .form-actions button:hover, .tree-mobile-trigger:hover { color: var(--accent); border-color: var(--accent); background: rgba(var(--accent-rgb), var(--alpha-hover)); }
+  .sync-button, .form-actions .primary { color: var(--background) !important; background: var(--accent) !important; border-color: var(--accent) !important; font-weight: 650; }
+  .sync-button:disabled { opacity: .5; cursor: not-allowed; }
+  .tree-mobile-trigger { display: none; align-items: center; gap: .35rem; }
+  .admin-layout { --admin-workspace-height: 1460px; display: grid; grid-template-columns: 240px minmax(520px, 1.4fr) minmax(420px, 1fr); gap: .8rem; align-items: start; }
+  .admin-tree-panel, .admin-form, .admin-preview, .current-article-identity { min-width: 0; border-radius: var(--radius-xl); }
+  .admin-tree-panel { position: sticky; top: 1rem; display: flex; flex-direction: column; height: var(--admin-workspace-height); min-height: 0; padding: .75rem; }
+  .tree-panel-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: .55rem; }
+  .tree-panel-heading [data-tree-close] { display: none; color: var(--foreground); background: transparent; border: 0; font-size: 1.5rem; cursor: pointer; }
+  .admin-search-label, .body-label, .admin-form label { display: grid; gap: .32rem; font-size: .8rem; }
+  .admin-search-label { margin-bottom: .3rem; }
+  .admin-tree-panel input, .admin-form input, .admin-form textarea, .admin-form select { width: 100%; box-sizing: border-box; padding: .58rem .65rem; color: var(--foreground); background: color-mix(in srgb, var(--background) 84%, transparent); border: 1px solid var(--border); border-radius: var(--radius-lg); font: inherit; font-size: .86rem; outline: none; }
+  .admin-tree-panel input:focus, .admin-form input:focus, .admin-form textarea:focus, .admin-form select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), .14); }
+  .admin-mode-toggle { display: flex; position: relative; margin-top: .55rem; border-bottom: 1px solid var(--border); }
+  .admin-mode-toggle::after { content: ''; position: absolute; left: 0; bottom: -1px; width: 50%; height: 2px; border-radius: var(--radius-full); background: var(--accent); transition: transform var(--transition-spring); }
+  .admin-mode-toggle.tag-mode::after { transform: translateX(100%); }
+  .admin-mode-toggle button { flex: 1; padding: .42rem .2rem; color: var(--foreground-dark); background: transparent; border: 0; font: inherit; font-size: .78rem; cursor: pointer; }
+  .admin-mode-toggle button.active { color: var(--accent); }
+  .admin-tree-scroll { flex: 1 1 auto; min-height: 0; margin-top: .4rem; overflow-y: auto; scrollbar-width: thin; }
+  .admin-tree, .admin-tree ul, .admin-tree li { margin: 0; padding: 0; list-style: none; }
+  .admin-node-header,
+  .admin-article-button { appearance: none; -webkit-appearance: none; display: flex; align-items: center; gap: .3rem; width: 100%; min-width: 0; margin: 0; color: var(--foreground); background: transparent; border: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; font: inherit; line-height: 1.35; text-align: left; cursor: pointer; }
+  .admin-node-header { padding: .32rem .35rem; }
+  .admin-node-header:hover { background: rgba(var(--accent-rgb), var(--alpha-hover)); }
+  .admin-node-arrow { width: 0; height: 0; flex: 0 0 auto; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid var(--foreground-dark); transition: transform var(--transition-base); }
+  .admin-node-header.expanded .admin-node-arrow { transform: rotate(90deg); }
+  .admin-tree-node.has-current > .admin-node-header .admin-node-arrow { border-left-color: var(--accent); }
+  .admin-node-label { min-width: 0; overflow: hidden; font-size: .84rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  .admin-node-count { margin-left: auto; padding: 0 6px; color: var(--foreground-dark); background: rgba(var(--accent-rgb), var(--alpha-bg)); border-radius: var(--radius-full); font-size: .66rem; }
+  .admin-node-children { position: relative; padding-left: 1rem !important; }
+  .admin-node-children.collapsed { display: none; }
+  .admin-node-children.active-path::before { content: ''; position: absolute; left: .42rem; top: 0; width: 1px; height: 100%; background: var(--accent); opacity: .85; }
+  .admin-article-button { padding: .3rem .38rem; color: var(--foreground-dark); gap: .35rem; }
+  .admin-article-button:hover { color: var(--foreground); background: rgba(var(--accent-rgb), var(--alpha-hover)); }
+  .admin-article-button.current { color: var(--accent-light); background: rgba(var(--accent-rgb), var(--alpha-active)); font-weight: 500; }
+  .admin-article-title { flex: 1 1 auto; min-width: 0; overflow: hidden; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+  .admin-article-badges { display: flex; flex: 0 0 auto; gap: .2rem; margin-left: auto; }
+  .admin-tree-badge { padding: 1px 4px; color: var(--alert-warning); border: 1px solid var(--alert-warning-border); border-radius: var(--radius-full); background: var(--alert-warning-bg); font-size: .55rem; white-space: nowrap; }
+  .admin-tree-badge.active { color: var(--alert-tip); border-color: var(--alert-tip-border); background: var(--alert-tip-bg); }
+  .admin-tree-badge.danger { color: var(--alert-caution); border-color: var(--alert-caution-border); background: var(--alert-caution-bg); }
+  .admin-edit-column { display: flex; min-width: 0; height: var(--admin-workspace-height); min-height: 0; flex-direction: column; gap: .55rem; }
+  .current-article-identity { display: grid; gap: .2rem; padding: .65rem .8rem; border-left: 3px solid var(--accent); }
+  .current-article-identity span { color: var(--accent); font-size: .72rem; font-weight: 650; }
+  .current-article-identity code { overflow: hidden; color: var(--foreground-dark); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+  .admin-form, .admin-preview { padding: .9rem; }
+  .admin-form { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; }
+  .admin-form textarea { resize: vertical; line-height: 1.5; }
+  .admin-form textarea[name="body"] { flex: 1 1 auto; min-height: 700px; resize: none; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .84rem; }
+  .admin-form input[readonly] { opacity: .65; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+  .form-grid .wide { grid-column: 1 / -1; }
+  .body-label { display: flex; flex: 1 1 auto; min-height: 0; margin-top: .7rem; flex-direction: column; }
+  .form-actions { margin-top: .7rem; }
+  .edited-at { align-self: center; margin-left: auto; color: var(--foreground-dark); font-size: .72rem; }
+  .sync-hint { margin: .55rem 0 0; color: var(--foreground-dark); font-size: .72rem; line-height: 1.5; }
+  .admin-preview { position: sticky; top: 1rem; display: flex; height: var(--admin-workspace-height); min-height: 0; flex-direction: column; overflow: hidden; }
+  .preview-heading { display: flex; flex: 0 0 auto; justify-content: space-between; gap: .5rem; padding-bottom: .55rem; border-bottom: 1px solid var(--border); font-size: .82rem; }
+  .preview-body { flex: 1 1 auto; min-height: 0; padding-right: .3rem; line-height: 1.7; overflow-x: hidden; overflow-y: auto; overflow-wrap: anywhere; scrollbar-gutter: stable; scrollbar-width: thin; font-family: var(--font-family); }
+  .preview-body h1, .preview-body h2, .preview-body h3 { margin: 1rem 0 .5rem; }
+  .preview-body p { margin: .7rem 0; }
+  .preview-body .preview-blank-lines { display: block; margin: 0; pointer-events: none; }
+  .preview-body .preview-blank-lines span { display: block; height: 1.7em; }
+  .preview-body pre { overflow-x: auto; padding: .75rem; background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .preview-body .preview-code { color: var(--foreground); font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; font-size: .82rem; line-height: 1.65; tab-size: 2; }
+  .preview-body .preview-code code { padding: 0; color: inherit; background: transparent; font: inherit; }
+  .preview-body .preview-code .token.comment, .preview-body .preview-code .token.prolog, .preview-body .preview-code .token.doctype, .preview-body .preview-code .token.cdata { color: var(--syn-comment); font-style: italic; }
+  .preview-body .preview-code .token.keyword, .preview-body .preview-code .token.atrule { color: var(--syn-keyword); }
+  .preview-body .preview-code .token.string, .preview-body .preview-code .token.char, .preview-body .preview-code .token.attr-value, .preview-body .preview-code .token.template-punctuation { color: var(--syn-string); }
+  .preview-body .preview-code .token.function, .preview-body .preview-code .token.class-name { color: var(--syn-function); }
+  .preview-body .preview-code .token.number, .preview-body .preview-code .token.boolean, .preview-body .preview-code .token.constant { color: var(--syn-number); }
+  .preview-body .preview-code .token.builtin, .preview-body .preview-code .token.operator, .preview-body .preview-code .token.property, .preview-body .preview-code .token.tag { color: var(--syn-type); }
+  .preview-body .preview-code .token.punctuation, .preview-body .preview-code .token.interpolation-punctuation { color: var(--syn-punctuation); }
+  .preview-body img { max-width: 100%; height: auto; }
+  .preview-body .katex-display { overflow-x: auto; overflow-y: hidden; padding: .35rem 0; }
+  .preview-body .katex, .preview-body .katex * { overflow-wrap: normal; word-break: normal; }
+  .preview-body .katex { white-space: nowrap; }
+  .preview-body .mermaid { margin: 1rem auto; overflow-x: auto; text-align: center; background: transparent; }
+  .preview-body .mermaid svg { max-width: 100%; height: auto; }
+  .preview-body .preview-component-card { margin: 1rem 0; padding: .8rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--muted) 45%, transparent); }
+  .preview-body .preview-component-card strong { color: var(--accent); }
+  .preview-body .preview-component-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem .65rem; margin: .65rem 0; }
+  .preview-body .preview-component-card dl div { display: grid; grid-template-columns: minmax(4rem, auto) minmax(0, 1fr); gap: .4rem; min-width: 0; }
+  .preview-body .preview-component-card dt { color: var(--foreground-dark); font-size: .72rem; }
+  .preview-body .preview-component-card dd { min-width: 0; margin: 0; overflow: hidden; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+  .preview-body .preview-component-card small { color: var(--foreground-dark); }
+  .preview-body details.preview-spoiler { margin: 1rem 0; padding: .65rem .8rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--muted) 35%, transparent); }
+  .preview-body details.preview-spoiler summary { color: var(--accent); cursor: pointer; }
+  .preview-body .preview-spoiler-content { margin-top: .7rem; padding-top: .65rem; border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent); color: var(--foreground-dark); }
+  .preview-body .preview-spoiler-content > :first-child { margin-top: 0; }
+  .preview-body .preview-spoiler-content > :last-child { margin-bottom: 0; }
+  .preview-body .preview-render-error { color: var(--alert-caution); border-color: var(--alert-caution-border); background: var(--alert-caution-bg); }
+  .admin-muted { color: var(--foreground-dark); font-size: .72rem; }
+  .admin-tree-backdrop { display: none; }
+
+  @media (max-width: 1180px) {
+    .admin-layout { grid-template-columns: 220px minmax(430px, 1fr); }
+    .admin-tree-panel, .admin-edit-column { height: auto; }
+    .admin-form textarea[name="body"] { min-height: 620px; }
+    .admin-preview { grid-column: 1 / -1; position: static; height: 760px; }
+  }
+  @media (max-width: 900px) {
+    .admin-overview { grid-template-columns: 1fr; }
+    .admin-layout { grid-template-columns: 210px minmax(0, 1fr); }
+  }
+  @media (max-width: 760px) {
+    .admin-shell { width: min(100% - 1rem, 720px); }
+    .system-status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-warning { grid-template-columns: 1fr; }
+    .admin-toolbar { align-items: stretch; flex-wrap: wrap; }
+    .tree-mobile-trigger { display: inline-flex; }
+    .toolbar-status { flex: 1; align-self: center; }
+    .admin-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; margin-left: 0; }
+    .admin-layout { display: block; }
+    .admin-tree-panel { position: fixed; z-index: 1300; left: 0; top: 0; width: min(280px, calc(100vw - 32px)); height: 100dvh; max-height: none; box-sizing: border-box; border-radius: 0 var(--radius-xl) var(--radius-xl) 0; background: rgba(var(--background-rgb), .96); backdrop-filter: blur(16px); transform: translateX(-100%); visibility: hidden; transition: transform 240ms var(--ease-drawer), visibility 0s 240ms; }
+    .admin-tree-panel.open { transform: translateX(0); visibility: visible; transition: transform 240ms var(--ease-drawer), visibility 0s; }
+    .tree-panel-heading [data-tree-close] { display: block; }
+    .admin-tree-backdrop { display: block; position: fixed; z-index: 1290; inset: 0; background: rgba(var(--backdrop-rgb), var(--alpha-overlay-backdrop)); opacity: 0; visibility: hidden; transition: opacity var(--transition-base), visibility 0s var(--transition-base); }
+    .admin-tree-backdrop.open { opacity: 1; visibility: visible; transition: opacity var(--transition-base), visibility 0s; }
+    body.admin-drawer-open { overflow: hidden; }
+    .admin-form textarea[name="body"] { min-height: 520px; }
+    .admin-preview { height: min(680px, 78dvh); margin-top: .8rem; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .wide { grid-column: auto; }
+    .edited-at { width: 100%; margin-left: 0; }
+    .admin-form textarea[name="body"] { min-height: 430px; }
+  }
+  @media (max-width: 430px) {
+    .system-status-grid { grid-template-columns: 1fr; }
+    .system-status-heading { align-items: flex-start; }
+    .status-refresh { white-space: nowrap; }
+    .admin-intro, .system-status { padding: .9rem; }
+    .admin-howto-grid { grid-template-columns: 1fr; }
+    .admin-actions { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .admin-tree-panel, .admin-tree-panel.open, .admin-tree-backdrop, .admin-node-arrow { transition: none; }
+  }
+</style>

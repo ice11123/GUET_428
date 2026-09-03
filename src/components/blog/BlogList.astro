@@ -1,0 +1,112 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BlogCard from './BlogCard.astro';
+import { resolveDirs } from '../../lib/utils';
+
+interface Props {
+  sort?: 'time' | 'dir';
+  dirOrder?: {
+    dir1: string[];
+    dir2: Record<string, string[]>;
+  };
+  posts?: CollectionEntry<'blog'>[];
+}
+
+const { sort = 'time', dirOrder = { dir1: [], dir2: {} }, posts: externalPosts } = Astro.props;
+let posts = externalPosts ?? await getCollection('blog');
+
+posts = posts.map(post => ({ ...post, data: { ...post.data, ...resolveDirs(post) } }));
+
+if (sort === 'time') {
+  posts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+}
+
+let orderedData: Array<[string, Array<[string, CollectionEntry<'blog'>[]]>]> = [];
+
+if (sort === 'dir') {
+  const grouped: Record<string, Record<string, CollectionEntry<'blog'>[]>> = {};
+  for (const post of posts) {
+    const d1 = post.data.dir1 || '未分类';
+    const d2 = post.data.dir2 || '';
+    grouped[d1] ??= {};
+    grouped[d1][d2] ??= [];
+    grouped[d1][d2].push(post);
+  }
+
+  const finalOrder: typeof orderedData = [];
+
+  const orderedDir1 = [
+    ...dirOrder.dir1.filter(d1 => grouped[d1]),
+    ...Object.keys(grouped).filter(d1 => !dirOrder.dir1.includes(d1)).sort((a, b) => a.localeCompare(b)),
+  ];
+
+  for (const d1 of orderedDir1) {
+    if (!grouped[d1]) continue;
+    const dir2Map = grouped[d1];
+    const dir2List: Array<[string, CollectionEntry<'blog'>[]]> = [];
+
+    // 1. 先渲染你配置的 dir2
+    const expectedDir2 = dirOrder.dir2[d1] || [];
+    for (const d2 of expectedDir2) {
+      if (dir2Map[d2]) {
+        const sortedPosts = dir2Map[d2].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+        dir2List.push([d2, sortedPosts]);
+      }
+    }
+
+    // 2. 自动渲染没有二级目录的文章（dir2 = ""）
+    if (dir2Map[""]) {
+      const sortedPosts = dir2Map[""].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+      dir2List.push(["", sortedPosts]);
+    }
+
+    // 3. 渲染未在配置中的其他二级目录
+    for (const d2 of Object.keys(dir2Map)) {
+      if (d2 === "" || expectedDir2.includes(d2)) continue;
+      const sortedPosts = dir2Map[d2].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+      dir2List.push([d2, sortedPosts]);
+    }
+
+    finalOrder.push([d1, dir2List]);
+  }
+
+  orderedData = finalOrder;
+}
+---
+
+<style>
+  .card-grid {
+    margin: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    place-items: center; /* 单个元素时自动居中 */
+    gap: 20px;
+    list-style: none;
+    padding: 0;
+  }
+</style>
+
+<main>
+  {sort === 'time' ? (
+    <ul class="card-grid">
+      {posts.map((post) => <BlogCard post={post} />)}
+    </ul>
+  ) : (
+    <div>
+      {(orderedData || []).map(([dir1, dir2List]) => (
+        <div>
+          <h2 class="mk-title">{dir1}</h2>
+          {dir2List.map(([dir2, list]) => (
+            <div>
+              <!-- 空 dir2 不显示标题，但会显示文章 -->
+              {dir2 && <h3 class="mk-title">{dir2}</h3>}
+              <ul class="card-grid">
+                {list.map(post => <BlogCard post={post} level={4} />)}
+              </ul>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )}
+</main>

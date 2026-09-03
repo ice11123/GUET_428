@@ -1,0 +1,51 @@
+{
+  "name": "@ice11123/guet-428",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "test": "pnpm run test:root && pnpm run test:worker",
+    "test:root": "node --experimental-strip-types --test src/lib/publicStatusRequest.test.ts src/lib/boundedConcurrency.test.ts src/lib/requestPool.test.ts src/lib/timedCache.test.ts src/lib/dataLoadingContracts.test.ts src/lib/adminDrafts.test.ts src/lib/headingAnchors.test.ts src/lib/homeCoverGesture.test.ts src/lib/homeCoverMotionGeometry.test.ts src/lib/persistentSidebar.test.ts src/lib/visualContracts.test.ts scripts/publish-article.test.mjs",
+    "test:worker": "pnpm --dir worker test",
+    "preview": "astro preview",
+    "publish:article": "node scripts/publish-article.mjs",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.2.0",
+    "@astrojs/mdx": "^6.0.3",
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.3",
+    "@tailwindcss/vite": "^4.2.4",
+    "astro": "^6.4.6",
+    "astro-expressive-code": "^0.44.1",
+    "dompurify": "^3.4.13",
+    "fuse.js": "^7.3.0",
+    "katex": "^0.16.45",
+    "marked": "15.0.0",
+    "prismjs": "^1.30.0",
+    "rehype-autolink-headings": "^7.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-slug": "^6.0.0",
+    "remark-definition-list": "^2.0.0",
+    "remark-emoji": "^5.0.2",
+    "remark-gfm": "^4.0.1",
+    "remark-mark-highlight": "^0.1.1",
+    "remark-math": "^6.0.0",
+    "sharp": "^0.34.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@types/prismjs": "^1.26.6",
+    "astro-compress": "^2.4.1",
+    "sass": "^1.99.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^5.9.2"
+  }
+}

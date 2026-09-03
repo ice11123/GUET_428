@@ -1,0 +1,39 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { stripBase } from '../../lib/urls';
+
+type Props = HTMLAttributes<'a'>;
+
+const { href, class: className, ...props } = Astro.props;
+const pathname = stripBase(Astro.url.pathname);
+let hrefPath = '';
+if (typeof href === 'string') {
+	const target = new URL(href, Astro.url);
+	if (target.origin === Astro.url.origin) hrefPath = stripBase(target.pathname);
+}
+const subpath = pathname.match(/[^\/]+/g);
+const isActive = hrefPath === pathname || hrefPath === '/' + (subpath?.[0] || '');
+---
+
+<a href={href} class:list={[className, { active: isActive }]} {...props}>
+	<slot />
+</a>
+<style lang="scss">
+a {
+	color: var(--header-link-text);
+	text-decoration: none;
+	padding: 8px 14px;
+	font-size: 15px;
+	letter-spacing: 0.3px;
+	transition: color 150ms var(--ease-out);
+
+	&:hover {
+		color: var(--accent);
+	}
+
+	&.active {
+		color: var(--accent-light);
+		font-weight: 600;
+	}
+}
+</style>

@@ -1,0 +1,22 @@
+---
+const today = new Date();
+import { LAB_NAME, INSTITUTION_NAME } from '../../consts';
+import { withBase } from '../../lib/urls';
+---
+
+<footer>
+	&copy; {today.getFullYear()}
+	<a href={withBase('/about/')}>{LAB_NAME}</a> · {INSTITUTION_NAME}。
+	All rights reserved.
+	Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
+</footer>
+<style>
+	footer {
+		padding: 2em 1em 6em 1em;
+		background: transparent;
+		color: var(--foreground);
+		text-align: center;
+		content-visibility: auto;
+		contain-intrinsic-block-size: auto 160px;
+	}
+</style>

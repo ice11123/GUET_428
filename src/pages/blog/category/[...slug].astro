@@ -1,0 +1,66 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../../layouts/PublicContentLayout.astro';
+import BlogList from '../../../components/blog/BlogList.astro';
+import JsonLd from '../../../components/blog/JsonLd.astro';
+import { resolveDirs } from '../../../lib/utils';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  const pathSet = new Set<string>();
+  for (const post of posts) {
+    const { dir1, dir2 } = resolveDirs(post);
+    if (dir1) {
+      pathSet.add(dir1);
+      if (dir2) pathSet.add(`${dir1}/${dir2}`);
+    }
+  }
+  return Array.from(pathSet).map(p => ({ params: { slug: p } }));
+}
+
+const { slug } = Astro.params;
+const categoryPath = slug!;
+const segments = categoryPath.split('/');
+const filterDir1 = segments[0];
+const filterDir2 = segments.length >= 2 ? segments[1] : '';
+
+const allPosts = await getCollection('blog');
+const filtered = allPosts.filter(post => {
+  const { dir1: d1, dir2: d2 } = resolveDirs(post);
+  if (filterDir2) return d1 === filterDir1 && d2 === filterDir2;
+  return d1 === filterDir1;
+});
+
+const pageTitle = filterDir2 ? `分类: ${filterDir1} / ${filterDir2}` : `分类: ${filterDir1}`;
+const pageDesc = `浏览 ${pageTitle} 下的所有文章`;
+
+const collectionPageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: pageTitle,
+  description: pageDesc,
+  url: new URL(Astro.url.pathname, Astro.site).href,
+};
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDesc}
+  pubDate={new Date()}
+  dir1={filterDir1}
+  dir2={filterDir2}
+  tags={[]}
+>
+  <JsonLd slot="head" data={collectionPageLd} />
+
+  <p style="color: var(--foreground-dark); text-align: center; margin-bottom: 1.5rem;">
+    共 {filtered.length} 篇文章
+  </p>
+  {
+    filtered.length > 0 ? (
+      <BlogList posts={filtered} sort="time" />
+    ) : (
+      <p style="text-align: center; color: var(--foreground-dark);">该分类下暂无文章。</p>
+    )
+  }
+</Layout>

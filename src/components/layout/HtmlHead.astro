@@ -1,0 +1,95 @@
+---
+import type { ImageMetadata } from 'astro';
+import { SITE_TITLE } from '../../consts';
+import { ClientRouter } from 'astro:transitions';
+import globalCss from '../../styles/global.scss?url';
+import { withBase } from '../../lib/urls';
+
+interface Props {
+	title: string;
+	description: string;
+	image?: string | ImageMetadata;
+}
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const { title, description, image } = Astro.props;
+
+let imageURL: string | undefined;
+if (image) {
+	if (typeof image === 'string') {
+		// 远程图片：直接转成完整URL
+		imageURL = new URL(withBase(image), Astro.site).href;
+	} else {
+		// 本地图片：取 src
+		imageURL = new URL(image.src, Astro.site).href;
+	}
+}
+---
+
+<!-- Global Metadata -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+<link rel="sitemap" href={withBase('/sitemap-index.xml')} />
+<link
+	rel="alternate"
+	type="application/rss+xml"
+	title={SITE_TITLE}
+	href={new URL(withBase('/rss.xml'), Astro.site)}
+/>
+<meta name="generator" content={Astro.generator} />
+
+<!-- Canonical URL -->
+<link rel="canonical" href={canonicalURL} />
+
+	<!-- 样式表通过 <link> 加载，确保 dev 模式下视图过渡后样式不丢失 -->
+	<link rel="stylesheet" href={globalCss}>
+
+<!-- Primary Meta Tags -->
+<title>{title}</title>
+<meta name="title" content={title} />
+<meta name="description" content={description} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={Astro.url} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{imageURL && <meta property="og:image" content={imageURL} />}
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={Astro.url} />
+<meta property="twitter:title" content={title} />
+<meta property="twitter:description" content={description} />
+{imageURL && <meta property="twitter:image" content={imageURL} />}
+
+<ClientRouter fallback="animate" />
+
+<script is:inline>
+  (function() {
+    var validThemes = ['light','dark'];
+    var migrations = {
+      'dark-blue': 'dark', 'dark-green': 'dark', 'dark-purple': 'dark',
+      'light-blue': 'light', 'light-green': 'light', 'light-rose': 'light'
+    };
+    var saved = localStorage.getItem('guet-428-theme');
+    if (saved && migrations[saved]) {
+      saved = migrations[saved];
+      localStorage.setItem('guet-428-theme', saved);
+    }
+    if (saved && validThemes.indexOf(saved) !== -1) {
+      document.documentElement.setAttribute('data-theme', saved);
+    } else {
+      // 无保存记录时，跟随浏览器深浅色偏好
+      var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      document.documentElement.setAttribute('data-theme', prefersLight ? 'light' : 'dark');
+    }
+
+    try {
+      if (localStorage.getItem('guet-428-header-collapsed') === 'true') {
+        document.documentElement.classList.add('header-collapsed');
+      }
+    } catch (_) {}
+  })();
+</script>

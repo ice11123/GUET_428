@@ -1,0 +1,22 @@
+name = "guet-428-admin-api"
+main = "src/index.js"
+compatibility_date = "2026-08-12"
+
+# GUET_428 尚未部署独立 Worker。
+# routes 不绑定主站，避免把管理 API 混入静态站点。
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+# 部署前必须创建 GUET_428 独立 KV，并替换此占位符。
+id = "YOUR_GUET_428_KV_NAMESPACE_ID"
+
+[vars]
+ALLOWED_ORIGIN = "https://ice11123.github.io"
+GITHUB_OWNER = "ice11123"
+GITHUB_REPO = "GUET_428"
+GITHUB_BRANCH = "main"
+
+# Secret（使用 wrangler secret put 设置，绝不提交到仓库）：
+# GITHUB_OAUTH_CLIENT_ID
+# GITHUB_OAUTH_CLIENT_SECRET
+# SESSION_SECRET

@@ -1,0 +1,56 @@
+/* ===== 亮绿主题（从 html[data-theme^="light"] 继承共享亮色变量） ===== */
+
+html[data-theme="light-green"] {
+  --background: #f3f8f4;
+  --background-light: #e6efe8;
+  --accent: #2e9a6a;
+  --accent-dark: #45b882;
+  --accent-light: #1d7d52;
+  --foreground: #1a2a20;
+  --foreground-dark: #3d5243;
+  --foreground-light: #0f1a14;
+  --muted: #dceee4;
+  --muted-dark: #edf6f1;
+  --muted-light: #cde5d7;
+  --border: #bcd5c6;
+  --border-dark: #d2e5d9;
+  --border-light: #a6c5b3;
+
+  --accent-rgb: 46, 154, 106;
+  --accent-dark-rgb: 69, 184, 130;
+  --accent-light-rgb: 29, 125, 82;
+  --foreground-rgb: 26, 42, 32;
+  --foreground-dark-rgb: 61, 82, 67;
+  --foreground-light-rgb: 15, 26, 20;
+  --background-rgb: 243, 248, 244;
+  --background-light-rgb: 230, 239, 232;
+  --muted-rgb: 220, 238, 228;
+  --muted-dark-rgb: 237, 246, 241;
+  --muted-light-rgb: 205, 229, 215;
+  --border-rgb: 188, 213, 198;
+  --border-dark-rgb: 210, 229, 217;
+  --border-light-rgb: 166, 197, 179;
+
+  --scrollbar-track: #e6efe8;
+  --scrollbar-thumb: #a6c5b3;
+  --link-underline-color: #1d7d52;
+  --backdrop-rgb: 228, 235, 230;
+  --header-link-text: #3d5243;
+  --header-link-hover: #1a2a20;
+
+  --browser-border: #cde5d7;
+  --browser-chrome-top: #f0f6f2;
+  --browser-chrome-bottom: #e6efe8;
+  --browser-input-bg: #f3f8f4;
+  --browser-input-border: #bcd5c6;
+  --browser-text: #1a2a20;
+  --browser-placeholder: #8ca395;
+  --browser-accent: #2e9a6a;
+  --browser-accent-hover: #1d7d52;
+  --browser-accent-rgb: 46, 154, 106;
+
+  --plot-bg: #f3f8f4;
+  --plot-axis-color: #1a2a20;
+  --plot-border: #bcd5c6;
+  --plot-default-color: #2e9a6a;
+}

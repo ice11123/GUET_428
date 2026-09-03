@@ -1,0 +1,40 @@
+---
+// 1. 使用 glob 扫描文件夹
+// 注意：这里必须使用绝对路径 /src/...
+const modules = import.meta.glob('/src/assets/icons/*.svg', {
+  eager: true,
+  query: '?raw',
+  import: 'default'
+});
+
+// 2. 处理路径，生成一个干净的键值对对象
+const icons = Object.fromEntries(
+  Object.entries(modules).map(([path, content]) => {
+    // 提取文件名：/src/assets/icons/bilibili.svg -> bilibili
+    const filename = path.split('/').pop()?.replace('.svg', '');
+    return [filename, content];
+  })
+) as Record<string, string>;
+
+// 3. 自动提取类型
+type IconName = keyof typeof icons;
+
+interface Props {
+  name: IconName;
+}
+
+const { name } = Astro.props;
+
+// 4. 获取图标
+const iconHtml = icons[name];
+---
+
+<span class="icon" set:html={iconHtml}></span>
+
+<style>
+	.icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+</style>

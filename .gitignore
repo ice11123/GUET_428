@@ -14,6 +14,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# legacy personal assets kept locally for recovery, never published or committed
+legacy-assets/
+artifacts/
+task_plan.md
+findings.md
+progress.md
+
 
 # environment variables
 .env

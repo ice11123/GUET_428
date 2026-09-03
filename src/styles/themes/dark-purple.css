@@ -1,0 +1,40 @@
+/* ===== 暗紫主题（从 :root 继承共享暗色变量，仅覆盖差异项） ===== */
+
+html[data-theme="dark-purple"] {
+  --background: #0d001f;
+  --background-dark: #06000f;
+  --background-light: #1a0538;
+  --accent: #a78bfa;
+  --accent-dark: #8b5cf6;
+  --accent-light: #c4b5fd;
+  --muted: #2d0d52;
+  --muted-dark: #1f0938;
+  --muted-light: #3d1570;
+  --border: #5b2d96;
+  --border-dark: #432070;
+  --border-light: #7c3fc7;
+
+  --accent-rgb: 167, 139, 250;
+  --accent-dark-rgb: 139, 92, 246;
+  --accent-light-rgb: 196, 181, 253;
+  --background-rgb: 13, 0, 31;
+  --background-dark-rgb: 6, 0, 15;
+  --background-light-rgb: 26, 5, 56;
+  --muted-rgb: 45, 13, 82;
+  --muted-dark-rgb: 31, 9, 56;
+  --muted-light-rgb: 61, 21, 112;
+  --border-rgb: 91, 45, 150;
+  --border-dark-rgb: 67, 32, 112;
+  --border-light-rgb: 124, 63, 199;
+
+  --link-underline-color: #a78bfa;
+
+  --scrollbar-track: #17121e;
+  --scrollbar-thumb: #7a5e96;
+
+  --browser-accent: #a78bfa;
+  --browser-accent-hover: #8b5cf6;
+  --browser-accent-rgb: 167, 139, 250;
+
+  --plot-default-color: #a78bfa;
+}

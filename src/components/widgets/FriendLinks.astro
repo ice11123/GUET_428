@@ -1,0 +1,99 @@
+---
+interface FriendLink {
+  url: string;
+  image: string;
+  name: string;
+  description: string;
+}
+
+interface Props {
+  links: FriendLink[];
+}
+
+const { links } = Astro.props;
+---
+
+<div class="friend-links">
+  {links.map((link) => (
+    <a href={link.url} target="_blank" rel="noopener noreferrer" class="friend-card">
+      <img
+        src={link.image}
+        alt={link.name}
+        loading="lazy"
+        width="64"
+        height="64"
+      />
+      <div class="friend-info">
+        <span class="friend-name">{link.name}</span>
+        <span class="friend-desc">{link.description}</span>
+      </div>
+    </a>
+  ))}
+</div>
+
+<style>
+  .friend-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .friend-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    background: var(--card-bg, var(--surface));
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out), transform 100ms var(--ease-out);
+  }
+
+  .friend-card:active { transform: scale(.99); }
+
+  .friend-card img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .friend-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .friend-name {
+    font-weight: 600;
+    font-size: 0.95em;
+  }
+
+  .friend-desc {
+    font-size: 0.8em;
+    color: var(--foreground-muted, #888);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .friend-links {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .friend-card:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .friend-card { transition: none; }
+    .friend-card:active { transform: none; }
+  }
+</style>

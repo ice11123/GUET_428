@@ -1,0 +1,40 @@
+/* ===== 暗绿主题（从 :root 继承共享暗色变量，仅覆盖差异项） ===== */
+
+html[data-theme="dark-green"] {
+  --background: #001a14;
+  --background-dark: #000a08;
+  --background-light: #052e24;
+  --accent: #34d399;
+  --accent-dark: #10b981;
+  --accent-light: #6ee7b7;
+  --muted: #0c3d2e;
+  --muted-dark: #082b20;
+  --muted-light: #145238;
+  --border: #237a4d;
+  --border-dark: #1a5c3a;
+  --border-light: #35996a;
+
+  --accent-rgb: 52, 211, 153;
+  --accent-dark-rgb: 16, 185, 129;
+  --accent-light-rgb: 110, 231, 183;
+  --background-rgb: 0, 26, 20;
+  --background-dark-rgb: 0, 10, 8;
+  --background-light-rgb: 5, 46, 36;
+  --muted-rgb: 12, 61, 46;
+  --muted-dark-rgb: 8, 43, 32;
+  --muted-light-rgb: 20, 82, 56;
+  --border-rgb: 35, 122, 77;
+  --border-dark-rgb: 26, 92, 58;
+  --border-light-rgb: 53, 153, 106;
+
+  --link-underline-color: #34d399;
+
+  --scrollbar-track: #121a17;
+  --scrollbar-thumb: #5e7a6b;
+
+  --browser-accent: #34d399;
+  --browser-accent-hover: #10b981;
+  --browser-accent-rgb: 52, 211, 153;
+
+  --plot-default-color: #34d399;
+}

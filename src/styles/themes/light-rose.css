@@ -1,0 +1,56 @@
+/* ===== 亮玫瑰主题（从 html[data-theme^="light"] 继承共享亮色变量） ===== */
+
+html[data-theme="light-rose"] {
+  --background: #faf6f7;
+  --background-light: #f2eaec;
+  --accent: #d1476e;
+  --accent-dark: #e06988;
+  --accent-light: #b83558;
+  --foreground: #2d1a22;
+  --foreground-dark: #4d3840;
+  --foreground-light: #1a0f14;
+  --muted: #f2e2e7;
+  --muted-dark: #f8eff2;
+  --muted-light: #ecd4db;
+  --border: #e0c8d0;
+  --border-dark: #ead8df;
+  --border-light: #d4b5bf;
+
+  --accent-rgb: 209, 71, 110;
+  --accent-dark-rgb: 224, 105, 136;
+  --accent-light-rgb: 184, 53, 88;
+  --foreground-rgb: 45, 26, 34;
+  --foreground-dark-rgb: 77, 56, 64;
+  --foreground-light-rgb: 15, 20, 25;
+  --background-rgb: 250, 246, 247;
+  --background-light-rgb: 242, 234, 236;
+  --muted-rgb: 242, 226, 231;
+  --muted-dark-rgb: 248, 239, 242;
+  --muted-light-rgb: 236, 212, 219;
+  --border-rgb: 224, 200, 208;
+  --border-dark-rgb: 234, 216, 223;
+  --border-light-rgb: 212, 181, 191;
+
+  --scrollbar-track: #f2eaec;
+  --scrollbar-thumb: #d4b5bf;
+  --link-underline-color: #b83558;
+  --backdrop-rgb: 238, 230, 233;
+  --header-link-text: #4d3840;
+  --header-link-hover: #2d1a22;
+
+  --browser-border: #ecd4db;
+  --browser-chrome-top: #f6f0f2;
+  --browser-chrome-bottom: #f2eaec;
+  --browser-input-bg: #faf6f7;
+  --browser-input-border: #e0c8d0;
+  --browser-text: #2d1a22;
+  --browser-placeholder: #b098a0;
+  --browser-accent: #d1476e;
+  --browser-accent-hover: #b83558;
+  --browser-accent-rgb: 209, 71, 110;
+
+  --plot-bg: #faf6f7;
+  --plot-axis-color: #2d1a22;
+  --plot-border: #e0c8d0;
+  --plot-default-color: #d1476e;
+}

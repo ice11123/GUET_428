@@ -1,0 +1,114 @@
+---
+import { ADMIN_SYNC_API_URL } from '../../consts';
+import '../../styles/system-status.scss';
+
+const cards = [
+  ['frontend', '管理台前端', '等待页面初始化'],
+  ['worker', 'Cloudflare Worker', '等待连接检测'],
+  ['repository', '目标仓库', '等待读取 main 分支'],
+  ['deployment', 'GitHub Pages', '等待读取部署状态'],
+];
+---
+
+<section class="home-status" data-public-status data-status-endpoint={ADMIN_SYNC_API_URL} aria-live="polite">
+  <div id="public-status-grid" class="system-status-grid home-status-grid">
+    {cards.map(([key, title, initial]) => (
+      <article class="system-card" data-public-card={key} data-state="checking">
+        <header><span class="system-dot"></span><strong>{title}</strong><span data-card-state>检测中</span></header>
+        <p data-card-value>{initial}</p>
+        <small data-card-detail>请稍候</small>
+        <a data-card-link hidden target="_blank" rel="noopener noreferrer">查看详情</a>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .home-status,
+  .home-status-grid,
+  .home-status-grid .system-card {
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .home-status { width: 100%; }
+  .home-status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-status .system-card header { align-items: flex-start; }
+  .home-status .system-card header strong {
+    overflow: visible;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .home-status .system-card header [data-card-state] {
+    flex: 0 0 auto;
+    max-width: 3.2em;
+    line-height: 1.25;
+    text-align: right;
+    white-space: normal;
+  }
+  .home-status .system-card p,
+  .home-status .system-card small {
+    overflow: visible;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    text-overflow: clip;
+  }
+  .home-status .system-status-grid { gap: .7rem; }
+  .home-status .system-card { min-height: 8.4rem; padding: .78rem .82rem; }
+  .home-status .system-card header strong { font-size: .84rem; }
+  .home-status .system-card header [data-card-state] { font-size: .72rem; }
+  .home-status .system-card p { margin-top: .5rem; font-size: .84rem; }
+  .home-status .system-card small,
+  .home-status .system-card a { font-size: .72rem; }
+
+  @media (max-width: 539px) {
+    .home-status-grid { grid-template-columns: 1fr; }
+    .home-status .system-card { min-height: 6.6rem; }
+  }
+</style>
+
+<script>
+  let cleanupPublicStatusLoader: (() => void) | undefined;
+
+  function initPublicStatusLoader() {
+    const root = document.querySelector<HTMLElement>('[data-public-status]');
+    if (!root || root.dataset.loaderBound === 'true') return;
+    cleanupPublicStatusLoader?.();
+    root.dataset.loaderBound = 'true';
+    const statusBlock = root.closest<HTMLElement>('.status-block');
+    const refreshButton = statusBlock?.querySelector<HTMLButtonElement>('[data-public-status-refresh]');
+    let runtimePromise: Promise<unknown> | undefined;
+    const requestRuntime = () => {
+      if (runtimePromise) return runtimePromise;
+      root.dataset.runtimeRequested = 'true';
+      observer?.disconnect();
+      runtimePromise = import('../../scripts/public-status');
+      return runtimePromise;
+    };
+    const handleRefresh = async (event: Event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      await requestRuntime();
+      refreshButton?.click();
+    };
+    const observer = 'IntersectionObserver' in window
+      ? new IntersectionObserver((entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) requestRuntime();
+        }, { rootMargin: '240px 0px' })
+      : undefined;
+    observer?.observe(root);
+    statusBlock?.addEventListener('pointerenter', requestRuntime, { once: true, passive: true });
+    statusBlock?.addEventListener('focusin', requestRuntime, { once: true });
+    refreshButton?.addEventListener('click', handleRefresh, { capture: true, once: true });
+    cleanupPublicStatusLoader = () => {
+      observer?.disconnect();
+      refreshButton?.removeEventListener('click', handleRefresh, { capture: true });
+    };
+  }
+
+  initPublicStatusLoader();
+  document.addEventListener('astro:page-load', initPublicStatusLoader);
+  document.addEventListener('astro:before-swap', () => cleanupPublicStatusLoader?.());
+</script>

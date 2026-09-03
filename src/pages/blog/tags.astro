@@ -1,0 +1,94 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/PublicContentLayout.astro';
+import JsonLd from '../../components/blog/JsonLd.astro';
+import { withBase } from '../../lib/urls';
+
+const posts = await getCollection('blog');
+
+const tagCount: Record<string, number> = {};
+for (const post of posts) {
+  for (const tag of (post.data.tags || [])) {
+    tagCount[tag] = (tagCount[tag] || 0) + 1;
+  }
+}
+
+const sortedTags = Object.entries(tagCount).sort((a, b) => b[1] - a[1]);
+
+const pageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: '标签',
+  description: '所有文章标签',
+  url: new URL(Astro.url.pathname, Astro.site).href,
+};
+---
+
+<Layout
+  title="标签"
+  description="所有文章标签"
+  pubDate={new Date()}
+  tags={[]}
+>
+  <JsonLd slot="head" data={pageLd} />
+
+  {sortedTags.length > 0 ? (
+    <div class="tags-cloud">
+      {sortedTags.map(([tag, count]) => (
+        <a href={withBase(`/blog/tag/${encodeURIComponent(tag)}/`)} class="tag-cloud-item">
+          <span class="tag-name">{tag}</span>
+          <span class="tag-count">{count}</span>
+        </a>
+      ))}
+    </div>
+  ) : (
+    <p style="text-align: center; color: var(--foreground-dark);">暂无标签。</p>
+  )}
+</Layout>
+
+<style>
+  .tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .tag-cloud-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 6px 16px;
+    font-size: 0.9rem;
+    color: var(--accent-light);
+    background: rgba(var(--accent-rgb), 0.08);
+    border: 1px solid rgba(var(--accent-rgb), 0.25);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: background-color 150ms var(--ease-out), border-color 150ms var(--ease-out), transform 100ms var(--ease-out);
+  }
+
+  .tag-cloud-item:active { transform: scale(.98); }
+
+  .tag-count {
+    font-size: 0.75rem;
+    color: var(--foreground-dark);
+    background: var(--tag-count-bg);
+    border-radius: 999px;
+    padding: 1px 7px;
+    min-width: 1.4em;
+    text-align: center;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tag-cloud-item:hover { background: rgba(var(--accent-rgb), 0.18); border-color: var(--accent); transform: translateY(-2px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tag-cloud-item { transition: none; }
+    .tag-cloud-item:hover, .tag-cloud-item:active { transform: none; }
+  }
+</style>

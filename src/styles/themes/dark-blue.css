@@ -1,0 +1,97 @@
+/* GUET_428 深色主题：黑色画布 + 金色强调。 */
+html[data-theme="dark"] {
+  /* —— 背景系 —— */
+  --background: #090806;
+  --background-dark: #020201;
+  --background-light: #171108;
+
+  /* —— 主强调金色 —— */
+  --accent: #d6ad55;
+  --accent-dark: #aa7d29;
+  --accent-light: #f1d27a;
+  --accent-secondary: #9f6d1f;
+  --accent-secondary-rgb: 159, 109, 31;
+  --accent-tertiary: #6fa7e8;
+  --accent-tertiary-dark: #3f72ad;
+  --accent-tertiary-rgb: 111, 167, 232;
+  --cover-start: #020201;
+  --cover-mid: #1d1308;
+  --cover-end: #8a621e;
+  --button-on-accent: #1b1005;
+
+  /* —— 文字前景 —— */
+  --foreground: #f4ead5;
+  --foreground-dark: #c9b98f;
+  --foreground-light: #fff8e7;
+
+  /* —— 柔和辅助背景 —— */
+  --muted: #17130b;
+  --muted-dark: #0d0a05;
+  --muted-light: #2a1d0c;
+
+  /* —— 边框分割线 —— */
+  --border: #4a381a;
+  --border-dark: #2c210e;
+  --border-light: #80632d;
+
+  /* —— RGB 分量 —— */
+  --accent-rgb: 214, 173, 85;
+  --accent-dark-rgb: 170, 125, 41;
+  --accent-light-rgb: 241, 210, 122;
+  --foreground-rgb: 244, 234, 213;
+  --foreground-dark-rgb: 201, 185, 143;
+  --foreground-light-rgb: 255, 248, 231;
+  --background-rgb: 9, 8, 6;
+  --background-dark-rgb: 2, 2, 1;
+  --background-light-rgb: 23, 17, 8;
+  --muted-rgb: 23, 19, 11;
+  --muted-dark-rgb: 13, 10, 5;
+  --muted-light-rgb: 42, 29, 12;
+  --border-rgb: 74, 56, 26;
+  --border-dark-rgb: 44, 33, 14;
+  --border-light-rgb: 128, 99, 45;
+
+  /* —— 阴影 —— */
+  --box-shadow: 0 2px 6px rgba(var(--foreground-dark-rgb), 0.25),
+                0 8px 24px rgba(var(--foreground-dark-rgb), 0.33),
+                0 16px 32px rgba(var(--foreground-dark-rgb), 0.33);
+  --hero-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+
+  /* —— 滚动条 —— */
+  --scrollbar-track: #17130b;
+  --scrollbar-thumb: #80632d;
+
+  /* —— 链接下划线 —— */
+  --link-underline-color: #d6ad55;
+
+  /* —— 搜索弹窗 —— */
+  --backdrop-rgb: 0, 0, 10;
+
+  /* —— 标签计数 —— */
+  --tag-count-bg: rgba(255, 255, 255, 0.08);
+
+  /* —— 导航链接 —— */
+  --header-link-text: #c9b98f;
+  --header-link-hover: #fff8e7;
+
+  /* —— MiniBrowser 组件 —— */
+  --browser-bg: #0d0a05;
+  --browser-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --browser-border: #4a381a;
+  --browser-chrome-top: #171108;
+  --browser-chrome-bottom: #0d0a05;
+  --browser-input-bg: #171108;
+  --browser-input-border: #80632d;
+  --browser-text: #fff8e7;
+  --browser-placeholder: #a9956f;
+  --browser-frame-bg: #020201;
+  --browser-accent: #d6ad55;
+  --browser-accent-hover: #f1d27a;
+  --browser-accent-rgb: 214, 173, 85;
+
+  /* —— Plot3D 图表 —— */
+  --plot-bg: #090806;
+  --plot-axis-color: #fff8e7;
+  --plot-border: #80632d;
+  --plot-default-color: #d6ad55;
+}

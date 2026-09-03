@@ -1,0 +1,65 @@
+---
+title: "博客功能演示文档"
+description: "这是一篇原创的功能演示文章，用来验证博客的 Markdown、数学公式、图表与交互组件。"
+pubDate: 2026-08-11
+dir1: "博客功能介绍与演示"
+tags: ["博客功能演示"]
+---
+
+import Plot3D from '../../../components/widgets/Plot3D.astro';
+import Spoiler from '../../../components/widgets/Spoiler.astro';
+
+## 欢迎
+
+这是“428强弱电综合实验室”的站点示例文章。以后可以直接在 `src/content/blog/` 中新增 Markdown 或 MDX 文件。
+
+> [!TIP]
+> 文章所在的文件夹会自动成为分类，Frontmatter 中的 `tags` 会生成标签页面。
+
+## 数学公式
+
+行内公式示例：$e^{i\pi}+1=0$。
+
+块级公式：
+
+$$
+\int_{-\infty}^{+\infty} e^{-x^2}\,dx=\sqrt{\pi}
+$$
+
+## Mermaid 图表
+
+```mermaid
+flowchart LR
+  A[编写 MDX] --> B[Astro 构建]
+  B --> C[GitHub Pages]
+```
+
+## 代码高亮
+
+```ts
+export function greet(name: string): string {
+  return `你好，${name}！`;
+}
+```
+
+## 三维曲面
+
+下面绘制一个简单的波纹曲面：
+
+<Plot3D
+  type="surface"
+  xSurface="u"
+  ySurface="v"
+  zSurface="Math.sin(Math.sqrt(u * u + v * v))"
+  uStart={-5}
+  uEnd={5}
+  vStart={-5}
+  vEnd={5}
+  points={50}
+/>
+
+## 折叠提示
+
+<Spoiler hint="点击查看">
+  这里可以放置需要暂时隐藏的内容。
+</Spoiler>

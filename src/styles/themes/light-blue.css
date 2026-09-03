@@ -1,0 +1,88 @@
+/* GUET_428 浅色主题：暖白画布上的中国红、金色与工程蓝。 */
+:root,
+html[data-theme="light"] {
+  --background: #fffaf3;
+  --background-dark: #fffdf8;
+  --background-light: #f7ead8;
+  --accent: #a61f2b;
+  --accent-dark: #7e1520;
+  --accent-light: #cf4b45;
+  --accent-secondary: #c4933b;
+  --accent-secondary-rgb: 196, 147, 59;
+  --accent-tertiary: #245b9e;
+  --accent-tertiary-dark: #173f71;
+  --accent-tertiary-rgb: 36, 91, 158;
+  --cover-start: #173f71;
+  --cover-mid: #a61f2b;
+  --cover-end: #c4933b;
+  --foreground: #2d1b16;
+  --foreground-dark: #6e5b50;
+  --foreground-light: #1b0f0b;
+  --muted: #f4e8d8;
+  --muted-dark: #fff8ed;
+  --muted-light: #ead3b2;
+  --border: #e2c9a4;
+  --border-dark: #efdcc0;
+  --border-light: #cda873;
+  --button-on-accent: #ffffff;
+
+  --accent-rgb: 166, 31, 43;
+  --accent-dark-rgb: 126, 21, 32;
+  --accent-light-rgb: 207, 75, 69;
+  --foreground-rgb: 45, 27, 22;
+  --foreground-dark-rgb: 110, 91, 80;
+  --foreground-light-rgb: 27, 15, 11;
+  --background-rgb: 255, 250, 243;
+  --background-dark-rgb: 255, 253, 248;
+  --background-light-rgb: 247, 234, 216;
+  --muted-rgb: 244, 232, 216;
+  --muted-dark-rgb: 255, 248, 237;
+  --muted-light-rgb: 234, 211, 178;
+  --border-rgb: 226, 201, 164;
+  --border-dark-rgb: 239, 220, 192;
+  --border-light-rgb: 205, 168, 115;
+
+  --box-shadow: 0 12px 32px rgba(32, 67, 108, 0.11);
+  --hero-shadow: 0 16px 48px rgba(28, 64, 108, 0.18);
+  --scrollbar-track: #f4e8d8;
+  --scrollbar-thumb: #cda873;
+  --link-underline-color: #245b9e;
+  --backdrop-rgb: 49, 25, 18;
+  --tag-count-bg: rgba(166, 31, 43, 0.08);
+  --header-link-text: #6e5b50;
+  --header-link-hover: #2d1b16;
+
+  --alert-note: #2563a9;
+  --alert-note-bg: rgba(37, 99, 169, 0.07);
+  --alert-note-border: #2563a9;
+  --alert-tip: #277a4a;
+  --alert-tip-bg: rgba(39, 122, 74, 0.07);
+  --alert-tip-border: #277a4a;
+  --alert-important: #7352ad;
+  --alert-important-bg: rgba(115, 82, 173, 0.07);
+  --alert-important-border: #7352ad;
+  --alert-warning: #9a6700;
+  --alert-warning-bg: rgba(154, 103, 0, 0.07);
+  --alert-warning-border: #9a6700;
+  --alert-caution: #c53b4e;
+  --alert-caution-bg: rgba(197, 59, 78, 0.07);
+  --alert-caution-border: #c53b4e;
+
+  --browser-bg: #ffffff;
+  --browser-shadow: 0 16px 44px rgba(62, 38, 44, 0.13);
+  --browser-border: #e2c9a4;
+  --browser-chrome-top: #fff8ed;
+  --browser-chrome-bottom: #f4e8d8;
+  --browser-input-bg: #fffaf3;
+  --browser-input-border: #cda873;
+  --browser-text: #2d1b16;
+  --browser-placeholder: #998273;
+  --browser-frame-bg: #fffdf8;
+  --browser-accent: #245b9e;
+  --browser-accent-hover: #173f71;
+  --browser-accent-rgb: 36, 91, 158;
+  --plot-bg: #fffaf3;
+  --plot-axis-color: #2d1b16;
+  --plot-border: #cda873;
+  --plot-default-color: #245b9e;
+}

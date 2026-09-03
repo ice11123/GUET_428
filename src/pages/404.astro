@@ -1,0 +1,47 @@
+---
+import Layout from '../layouts/PublicContentLayout.astro';
+import { SITE_START_DATE } from '../consts';
+import { withBase } from '../lib/urls';
+---
+
+<Layout
+  title="页面未找到"
+  description="你访问的页面不存在。"
+  pubDate={SITE_START_DATE}
+  hidePageHeader
+>
+  <div class="not-found">
+    <p class="code">404</p>
+    <h2>页面未找到</h2>
+    <p>链接可能已经失效，或者地址输入有误。</p>
+    <a href={withBase('/')}>返回首页</a>
+  </div>
+</Layout>
+
+<style>
+  .not-found {
+    min-height: 50vh;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .code {
+    margin: 0;
+    color: var(--accent-light);
+    font-size: clamp(4rem, 14vw, 8rem);
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .not-found h2,
+  .not-found p {
+    margin: 0;
+  }
+
+  .not-found a {
+    margin-top: 0.75rem;
+  }
+</style>

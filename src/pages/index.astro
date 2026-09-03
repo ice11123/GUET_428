@@ -1,0 +1,675 @@
+---
+import { getCollection } from 'astro:content';
+import { getImage, Image } from 'astro:assets';
+import { INSTITUTION_NAME, LAB_NAME, PROGRAM_NAME, SITE_DESCRIPTION, SITE_TITLE, fmtNum } from '../consts';
+import { computeSiteStats } from '../lib/blogStats';
+import { getRepoLanguages } from '../lib/repoStats';
+import { parseMaintenance } from '../lib/maintenance';
+import PublicLayout from '../layouts/PublicLayout.astro';
+import JsonLd from '../components/blog/JsonLd.astro';
+import FormattedDate from '../components/blog/FormattedDate.astro';
+import GitHubRepoStats from '../components/github/GitHubRepoStats.astro';
+import PublicStatus from '../components/home/PublicStatus.astro';
+import { blogPostPath, withBase } from '../lib/urls';
+import maintenanceSource from '../content/maintenance.md?raw';
+import homeHeroImage from '../assets/lab-hero.png';
+
+const homeHeroDarkImage = homeHeroImage;
+
+const homeHeroWidths = [640, 960, 1440];
+const homeHeroFullWidths = [1440, 1920, 2560, 3840];
+const [
+  homeHeroLqip,
+  homeHeroWebpSources,
+  homeHeroFullSources,
+  homeHeroDarkLqip,
+  homeHeroDarkAvifSources,
+  homeHeroDarkWebpSources,
+  homeHeroDarkFullSources,
+] = await Promise.all([
+  getImage({ src: homeHeroImage, width: 64, format: 'webp', quality: 28 }),
+  Promise.all(homeHeroWidths.map((width) => getImage({ src: homeHeroImage, width, format: 'webp', quality: 80 }))),
+  Promise.all(homeHeroFullWidths.map((width) => getImage({ src: homeHeroImage, width, format: 'webp', quality: 90 }))),
+  getImage({ src: homeHeroDarkImage, width: 64, format: 'webp', quality: 28 }),
+  Promise.all(homeHeroWidths.map((width) => getImage({ src: homeHeroDarkImage, width, format: 'avif', quality: 58 }))),
+  Promise.all(homeHeroWidths.map((width) => getImage({ src: homeHeroDarkImage, width, format: 'webp', quality: 80 }))),
+  Promise.all(homeHeroFullWidths.map((width) => getImage({ src: homeHeroDarkImage, width, format: 'webp', quality: 90 }))),
+]);
+const toSrcset = (sources: typeof homeHeroWebpSources, widths: number[]) => sources
+  .map((source, index) => `${source.src} ${widths[index]}w`)
+  .join(', ');
+const homeHeroWebpSrcset = toSrcset(homeHeroWebpSources, homeHeroWidths);
+const homeHeroFullSrcset = homeHeroFullSources
+  .map((source, index) => `${source.src} ${homeHeroFullWidths[index]}w`)
+  .join(', ');
+const homeHeroFallback = homeHeroWebpSources.at(-1)?.src ?? homeHeroLqip.src;
+const homeHeroFullFallback = homeHeroFullSources.at(-1)?.src ?? homeHeroLqip.src;
+const homeHeroDarkAvifSrcset = toSrcset(homeHeroDarkAvifSources, homeHeroWidths);
+const homeHeroDarkWebpSrcset = toSrcset(homeHeroDarkWebpSources, homeHeroWidths);
+const homeHeroDarkFullSrcset = homeHeroDarkFullSources
+  .map((source, index) => `${source.src} ${homeHeroFullWidths[index]}w`)
+  .join(', ');
+const homeHeroDarkFallback = homeHeroDarkWebpSources.at(-1)?.src ?? homeHeroDarkLqip.src;
+const homeHeroDarkFullFallback = homeHeroDarkFullSources.at(-1)?.src ?? homeHeroDarkLqip.src;
+
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  url: new URL(withBase('/'), Astro.site).href,
+};
+
+const allPosts = await getCollection('blog');
+const recentPosts = allPosts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+
+const stats = computeSiteStats(allPosts);
+const { repoLanguages, totalRepoLines } = getRepoLanguages();
+const maintenanceEntries = await parseMaintenance(maintenanceSource);
+const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
+---
+
+<PublicLayout title={SITE_TITLE} description={SITE_DESCRIPTION} image={homeHeroImage}>
+  <JsonLd slot="head" data={websiteLd} />
+
+  <div class="home-page">
+    <div
+      class="home-cover-shell"
+      id="home-cover"
+      data-home-cover
+      data-expanded="false"
+      style={`--home-cover-light-lqip: url("${homeHeroLqip.src}"); --home-cover-dark-lqip: url("${homeHeroDarkLqip.src}")`}
+    >
+      <section class="home-cover" aria-labelledby="home-title" aria-describedby="home-cover-description">
+      <div class="cover-photo-frame" aria-hidden="true">
+        <picture>
+          <source
+            data-home-hero-source
+            type="image/webp"
+            data-light-type="image/webp"
+            data-light-srcset={homeHeroWebpSrcset}
+            data-dark-type="image/avif"
+            data-dark-srcset={homeHeroDarkAvifSrcset}
+            sizes="(min-width: 1688px) 1440px, (min-width: 1200px) calc(100vw - 248px), (min-width: 1000px) calc(100vw - 220px), 100vw"
+          />
+          <img
+            class="cover-photo"
+            data-home-hero-photo
+            src={homeHeroLqip.src}
+            data-light-src={homeHeroFallback}
+            data-light-srcset={homeHeroWebpSrcset}
+            data-dark-src={homeHeroDarkFallback}
+            data-dark-srcset={homeHeroDarkWebpSrcset}
+            sizes="(min-width: 1688px) 1440px, (min-width: 1200px) calc(100vw - 248px), (min-width: 1000px) calc(100vw - 220px), 100vw"
+            alt=""
+            width={homeHeroImage.width}
+            height={homeHeroImage.height}
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+          />
+        </picture>
+        <script is:inline>
+          (() => {
+            const frame = document.currentScript?.parentElement;
+            const source = frame?.querySelector('[data-home-hero-source]');
+            const photo = frame?.querySelector('[data-home-hero-photo]');
+            if (!(source instanceof HTMLSourceElement) || !(photo instanceof HTMLImageElement)) return;
+            const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+            const sourceType = source.getAttribute(`data-${theme}-type`);
+            const sourceSrcset = source.getAttribute(`data-${theme}-srcset`);
+            const photoSrcset = photo.getAttribute(`data-${theme}-srcset`);
+            const photoSrc = photo.getAttribute(`data-${theme}-src`);
+            if (!sourceType || !sourceSrcset || !photoSrcset || !photoSrc) return;
+            source.type = sourceType;
+            source.srcset = sourceSrcset;
+            photo.srcset = photoSrcset;
+            photo.src = photoSrc;
+          })();
+        </script>
+      </div>
+      <div class="cover-photo-overlay" aria-hidden="true"></div>
+      <div class="cover-copy">
+        <p class="home-eyebrow">GUET · ELECTRICAL ENGINEERING LAB</p>
+        <h1 id="home-title">{LAB_NAME}</h1>
+        <p>{INSTITUTION_NAME} · {PROGRAM_NAME}</p>
+      </div>
+      <span class="sr-only" id="home-cover-description">展开后完整展示主页壁纸，可点击箭头、使用桌面滚轮、按 Escape 或向下滑动收回。</span>
+      <div class="cover-gesture-zone" data-home-cover-gesture aria-hidden="true"></div>
+      </section>
+      <div class="cover-full-stage" data-home-cover-stage aria-hidden="true">
+        <img
+          class="cover-full-photo"
+          data-home-hero-full
+          src={homeHeroLqip.src}
+          data-light-lqip={homeHeroLqip.src}
+          data-dark-lqip={homeHeroDarkLqip.src}
+          data-full-src={homeHeroFullFallback}
+          data-full-srcset={homeHeroFullSrcset}
+          data-light-full-src={homeHeroFullFallback}
+          data-light-full-srcset={homeHeroFullSrcset}
+          data-dark-full-src={homeHeroDarkFullFallback}
+          data-dark-full-srcset={homeHeroDarkFullSrcset}
+          data-full-sizes="(min-width: 1200px) calc(100vw - 248px), (min-width: 1000px) calc(100vw - 220px), 100vw"
+          alt=""
+          width={homeHeroImage.width}
+          height={homeHeroImage.height}
+          decoding="async"
+        />
+      </div>
+      <button
+        type="button"
+        class="cover-expand-toggle"
+        data-home-cover-toggle
+        aria-controls="home-cover"
+        aria-expanded="false"
+        aria-label="展开全图壁纸"
+        title="展开全图壁纸"
+      >
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+          <path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="sr-only" data-home-cover-toggle-label>展开全图壁纸</span>
+      </button>
+      <span class="sr-only" role="status" aria-live="polite" data-home-cover-status></span>
+    </div>
+
+    <div class="home-drawer" data-home-lower-motion>
+      <svg class="cover-waves" viewBox="0 0 192 64" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <path
+            id="home-gentle-wave"
+            d="M-192 36C-176 22-160 22-144 36S-112 50-96 36S-64 22-48 36S-16 50 0 36S32 22 48 36S80 50 96 36S128 22 144 36S176 50 192 36S224 22 240 36S272 50 288 36S320 22 336 36S368 50 384 36V64H-192Z"
+          />
+        </defs>
+        <g class="cover-wave-parallax">
+          <use class="cover-wave-layer cover-wave-layer-back" href="#home-gentle-wave" y="0" />
+          <use class="cover-wave-layer cover-wave-layer-middle" href="#home-gentle-wave" y="6" />
+          <use class="cover-wave-layer cover-wave-layer-front" href="#home-gentle-wave" y="12" />
+        </g>
+      </svg>
+      <div class="home-content-layout">
+      <div class="home-main-column">
+    <section class="recent-section" aria-labelledby="recent-title">
+      <header class="section-heading">
+        <div>
+          <p class="section-kicker">RECENT WRITING</p>
+          <h2 id="recent-title">近期文章</h2>
+        </div>
+        <a class="section-link" href={withBase('/blog/')}>查看全部文章 <span aria-hidden="true">→</span></a>
+      </header>
+
+      {recentPosts.length > 0 ? (
+        <div class="recent-list">
+          {recentPosts.map((post) => (
+            <article class="home-post-card">
+              <a class="home-post-link" href={blogPostPath(post.id)}>
+                <div class="home-post-media">
+                  {post.data.heroImage ? (
+                    <Image src={post.data.heroImage} width={720} height={420} alt={post.data.title} />
+                  ) : (
+                    <div class="document-preview" aria-hidden="true">
+                      <div class="document-sheet">
+                        <span class="document-kicker">ARTICLE NOTE</span>
+                        <span class="document-rule document-rule-long"></span>
+                        <span class="document-rule"></span>
+                        <span class="document-rule document-rule-short"></span>
+                        <span class="document-chip">{post.data.dir1 || '实验室记录'}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div class="home-post-copy">
+                  <div class="post-meta-line">
+                    <span>{post.data.dir1 || '未分类'}</span>
+                    <time datetime={post.data.pubDate.toISOString()}><FormattedDate date={post.data.pubDate} /></time>
+                  </div>
+                  <h3>{post.data.title}</h3>
+                  <p>{post.data.description.replace(/<[^>]+>/g, '')}</p>
+                  {post.data.tags.length > 0 && (
+                    <div class="post-tags" aria-label="文章标签">
+                      {post.data.tags.slice(0, 3).map((tag) => <span>{tag}</span>)}
+                    </div>
+                  )}
+                  <span class="post-more">继续阅读 <span aria-hidden="true">↗</span></span>
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div class="home-empty">
+          <strong>文章正在整理中</strong>
+          <p>这里会展示最近发布的内容。你也可以先进入博客列表查看分类结构。</p>
+          <a href={withBase('/blog/')}>浏览博客</a>
+        </div>
+      )}
+    </section>
+
+    <section class="home-info-strip" aria-labelledby="site-info-title">
+      <header class="info-strip-heading">
+        <div>
+          <p class="section-kicker">SITE NOTES</p>
+          <h2 id="site-info-title">站点信息</h2>
+        </div>
+        <p>
+          已运行 {stats.daysSinceLaunch} 天 · 累计 {fmtNum(stats.totalWords)} 字 · 仓库 {fmtNum(totalRepoLines)} 行代码
+        </p>
+      </header>
+
+      <div class="info-strip-grid">
+        <section class="info-block language-block" aria-labelledby="language-title">
+          <div class="info-block-heading">
+            <span>01</span>
+            <div><h3 id="language-title">站点技术构成</h3><p>GUET_428 网站仓库</p></div>
+          </div>
+          <div class="language-grid">
+            <GitHubRepoStats languages={repoLanguages} totalLines={totalRepoLines} />
+          </div>
+        </section>
+
+        <section class="info-block status-block" aria-label="系统状态">
+          <div class="info-block-heading">
+            <span>02</span>
+            <div><h3>运行状态</h3><p>按需检测，不持续轮询</p></div>
+            <button type="button" class="status-refresh" data-public-status-refresh aria-controls="public-status-grid" aria-label="重新检测系统状态">
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span data-public-status-refresh-label>刷新</span>
+            </button>
+          </div>
+          <PublicStatus />
+        </section>
+      </div>
+
+      <div class="info-folds">
+        <details class="info-fold maintenance-fold" open>
+          <summary><span>03</span><strong>近期维护公告</strong><small>查看最近的功能调整与修复</small></summary>
+          <div class="maintenance-list">
+            {recentMaintenanceEntries.map((entry, index) => (
+              <details class="maintenance-entry" open={index === 0}>
+                <summary><time datetime={entry.date}>{entry.date}</time><span>{entry.title}</span></summary>
+                <div class="maintenance-body" set:html={entry.html}></div>
+              </details>
+            ))}
+            {maintenanceEntries.length > recentMaintenanceEntries.length && (
+              <a class="maintenance-archive-link" href={withBase('/maintenance/')}>查看全部 {maintenanceEntries.length} 条维护记录 →</a>
+            )}
+          </div>
+        </details>
+
+      </div>
+    </section>
+      </div>
+    </div>
+    </div>
+  </div>
+  <script src="../scripts/home-hero-motion.ts"></script>
+</PublicLayout>
+
+<style>
+  .home-page {
+    width: 100%;
+    margin: 0;
+    padding: 0 0 64px;
+    overflow: clip;
+    color: var(--text-primary);
+    text-align: left;
+  }
+
+  .home-cover {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: clamp(540px, 42vw, 660px);
+    overflow: hidden;
+    color: #fff;
+    background: var(--cover-start);
+  }
+
+  .home-cover-shell {
+    --home-cover-lqip: var(--home-cover-light-lqip);
+    position: relative;
+    min-height: clamp(540px, 42vw, 660px);
+    background: var(--cover-start);
+  }
+  :global([data-theme='dark']) .home-cover-shell { --home-cover-lqip: var(--home-cover-dark-lqip); }
+  .home-cover-shell .home-cover { min-height: inherit; }
+
+  .cover-photo-frame { position: absolute; z-index: 0; inset: 0; overflow: hidden; background: #0a0d0d var(--home-cover-lqip) center / cover no-repeat; }
+  .cover-photo-frame picture { display: block; width: 100%; height: 100%; }
+  .cover-photo-frame :global(.cover-photo) {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 54% 55%;
+    border-radius: 0;
+  }
+  .cover-photo-overlay,
+  .cover-full-stage::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, rgba(25, 5, 15, .72) 0%, rgba(34, 8, 24, .42) 36%, rgba(20, 4, 18, .1) 68%),
+      linear-gradient(180deg, rgba(14, 4, 18, .12) 35%, rgba(14, 4, 18, .48) 100%);
+  }
+  .cover-full-stage::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+  }
+  :global([data-theme='dark']) .cover-photo-overlay,
+  :global([data-theme='dark']) .cover-full-stage::after {
+    background:
+      linear-gradient(90deg, rgba(0, 0, 0, .76) 0%, rgba(0, 0, 0, .42) 38%, rgba(0, 0, 0, .08) 70%),
+      linear-gradient(180deg, rgba(0, 0, 0, .08) 30%, rgba(0, 0, 0, .4) 100%);
+  }
+  :global([data-theme='dark']) .cover-photo-frame :global(.cover-photo) { object-position: 62% 52%; }
+  .cover-copy { position: relative; z-index: 901; width: min(780px, calc(100% - 64px)); box-sizing: border-box; margin-right: auto; padding: 32px 24px 108px max(48px, 8vw); text-align: left; text-shadow: 0 3px 24px rgba(12, 4, 18, .58); }
+  .home-eyebrow, .section-kicker { margin: 0 0 12px; color: var(--accent-tertiary); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
+  .cover-copy .home-eyebrow { color: rgba(255,255,255,.78); }
+  .cover-copy h1 { margin: 0; color: #fff; font-size: 48px; line-height: 1.2; letter-spacing: .08em; }
+  .cover-copy > p:last-child { margin: 20px 0 0; color: rgba(255,255,255,.86); font-size: 16px; letter-spacing: .08em; }
+  .cover-full-stage {
+    position: fixed;
+    z-index: 900;
+    top: var(--site-header-height, 81px);
+    right: auto;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    width: 100vw;
+    visibility: hidden;
+    overflow: hidden;
+    place-items: center;
+    pointer-events: none;
+    background: #0a0d0d var(--home-cover-lqip) center / cover no-repeat;
+    clip-path: inset(0);
+  }
+  .cover-full-stage > :global(.cover-full-photo) {
+    position: absolute;
+    z-index: 0;
+    display: block;
+    top: 0;
+    left: 0;
+    width: auto;
+    max-width: none;
+    height: auto;
+    border-radius: 0;
+    transform-origin: 0 0;
+  }
+  .cover-expand-toggle {
+    position: absolute;
+    z-index: 922;
+    top: 16px;
+    left: 50%;
+    display: grid;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    place-items: center;
+    color: #fff;
+    background: rgba(8, 12, 14, .3);
+    border: 1px solid rgba(255, 255, 255, .7);
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    cursor: pointer;
+    touch-action: pan-x pinch-zoom;
+    transform: translateX(-50%);
+    transition: transform 150ms var(--ease-out), background-color 150ms ease, border-color 150ms ease;
+  }
+  .cover-expand-toggle svg { transition: transform 140ms var(--ease-out); }
+  .cover-expand-toggle:active { transform: translateX(-50%) scale(.96); }
+  .cover-expand-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+  .cover-gesture-zone {
+    position: absolute;
+    z-index: 921;
+    top: 0;
+    left: 50%;
+    width: 144px;
+    height: 88px;
+    touch-action: pan-x pinch-zoom;
+    transform: translateX(-50%);
+  }
+  .cover-waves {
+    position: absolute;
+    z-index: 3;
+    right: 0;
+    bottom: calc(100% - 1px);
+    left: 0;
+    display: block;
+    width: 100%;
+    height: clamp(64px, 13dvh, 150px);
+    pointer-events: none;
+  }
+  .cover-wave-layer {
+    transform-origin: center;
+    animation-name: cover-wave-drift;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-play-state: paused;
+  }
+  .cover-wave-layer-back {
+    fill: color-mix(in srgb, var(--canvas) 72%, var(--accent) 28%);
+    opacity: .58;
+    animation-duration: 12s;
+    animation-delay: -2s;
+  }
+  .cover-wave-layer-middle {
+    fill: color-mix(in srgb, var(--canvas) 84%, var(--accent) 16%);
+    opacity: .76;
+    animation-duration: 7s;
+    animation-delay: -3s;
+  }
+  .cover-wave-layer-front {
+    fill: var(--canvas);
+    animation-duration: 4s;
+    animation-delay: -4s;
+  }
+  .home-drawer[data-waves-visible='true'] .cover-wave-layer {
+    animation-play-state: running;
+    will-change: transform;
+  }
+
+  :global(html[data-home-cover-motion-active='true']),
+  :global(html[data-home-cover-expanded='true']) {
+    overflow: hidden;
+    scrollbar-gutter: auto;
+  }
+  :global(html[data-home-cover-motion-active='true']) .home-page,
+  :global(html[data-home-cover-expanded='true']) .home-page { overflow: visible; }
+  :global(html[data-home-cover-motion-active='true']) .cover-full-stage,
+  .home-cover-shell[data-state='expanded'] .cover-full-stage { visibility: visible; }
+  :global(html[data-home-cover-motion-active='true']) .cover-expand-toggle {
+    position: fixed;
+    top: calc(var(--site-header-height, 81px) + 16px);
+    left: var(--home-cover-stage-center, 50vw);
+  }
+  :global(html[data-home-cover-motion-active='true']) .cover-gesture-zone,
+  .home-cover-shell[data-state='expanded'] .cover-gesture-zone {
+    position: fixed;
+    top: var(--site-header-height, 81px);
+    left: var(--home-cover-stage-center, 50vw);
+  }
+  :global(html[data-home-cover-motion-active='true']) .home-drawer {
+    position: relative;
+    z-index: 910;
+    pointer-events: none;
+  }
+  :global(html[data-home-cover-motion-active='true'] [data-persistent-sidebar]),
+  :global(html[data-home-cover-expanded='true'] [data-persistent-sidebar]) {
+    z-index: 910;
+  }
+  .home-cover-shell[data-state='expanded'] .cover-full-stage { clip-path: inset(0); }
+  .home-cover-shell[data-state='expanded'] .home-cover { visibility: hidden; }
+  .home-cover-shell[data-state='expanded'] .cover-expand-toggle {
+    position: fixed;
+    top: calc(var(--site-header-height, 81px) + 16px);
+    left: var(--home-cover-stage-center, 50vw);
+  }
+  .home-cover-shell[data-state='expanded'] .cover-expand-toggle svg { transform: rotate(180deg); }
+
+  .home-content-layout { position: relative; z-index: 4; width: min(1080px, calc(100% - 48px)); margin: 40px auto 0; }
+  .home-main-column { min-width: 0; }
+  .home-drawer { position: relative; z-index: 4; display: flow-root; min-width: 0; background: var(--canvas); }
+  .section-link:focus-visible, .home-post-link:focus-visible, .info-fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+
+  .recent-section { padding: 0 0 64px; border-bottom: 1px solid var(--border); }
+  .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+  .section-heading h2, .info-strip-heading h2 { margin: 0; color: var(--text-primary); font-size: 28px; line-height: 1.25; }
+  .section-link { color: var(--accent); font-size: 14px; font-weight: 650; }
+  .recent-list { display: grid; gap: 24px; }
+  .home-post-card { overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .home-post-link { display: grid; grid-template-columns: clamp(220px, 31%, 320px) minmax(0, 1fr); min-height: 210px; color: inherit; }
+  .home-post-media { position: relative; min-height: 210px; overflow: hidden; background: linear-gradient(145deg, color-mix(in srgb, var(--surface-subtle) 88%, var(--accent) 12%), color-mix(in srgb, var(--surface) 94%, var(--accent) 6%)); }
+  .home-post-media :global(img) { width: 100%; height: 100%; object-fit: cover; border-radius: 0; transition: transform 220ms cubic-bezier(.23,1,.32,1); }
+  .document-preview { display: grid; width: 100%; height: 100%; min-height: inherit; place-items: center; padding: 24px; box-sizing: border-box; }
+  .document-sheet { position: relative; display: flex; flex-direction: column; width: min(190px, 84%); min-height: 138px; box-sizing: border-box; padding: 22px 20px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1px solid color-mix(in srgb, var(--border) 76%, transparent); border-radius: 10px; box-shadow: 0 14px 28px color-mix(in srgb, var(--text-primary) 9%, transparent); transform: rotate(-2deg); }
+  .document-sheet::before { content: ''; position: absolute; top: -1px; right: 22px; width: 28px; height: 4px; background: var(--accent); border-radius: 0 0 4px 4px; }
+  .document-kicker { margin-bottom: 20px; color: var(--accent); font-size: 9px; font-weight: 750; letter-spacing: .14em; }
+  .document-rule { display: block; width: 72%; height: 5px; margin-top: 9px; background: color-mix(in srgb, var(--text-secondary) 25%, transparent); border-radius: 999px; }
+  .document-rule-long { width: 100%; margin-top: 0; background: color-mix(in srgb, var(--text-primary) 34%, transparent); }
+  .document-rule-short { width: 48%; }
+  .document-chip { align-self: flex-start; max-width: 100%; overflow: hidden; margin-top: 20px; padding: 3px 8px; color: var(--text-secondary); background: var(--surface-subtle); border-radius: 999px; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+  .home-post-copy { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 32px 40px; }
+  .post-meta-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; color: var(--text-secondary); font-size: 12px; }
+  .post-meta-line > span { color: var(--accent); font-weight: 650; }
+  .home-post-copy h3 { margin: 12px 0 0; color: var(--text-primary); font-size: 20px; line-height: 1.4; }
+  .home-post-copy > p { display: -webkit-box; overflow: hidden; margin: 12px 0 0; color: var(--text-secondary); font-size: 16px; line-height: 1.65; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .post-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .post-tags span { padding: 3px 9px; color: var(--text-secondary); background: var(--surface-subtle); border-radius: 999px; font-size: 12px; }
+  .post-more { margin-top: 20px; color: var(--accent); font-size: 14px; font-weight: 650; }
+  .home-empty { padding: 32px; color: var(--text-secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .home-empty strong { color: var(--text-primary); font-size: 20px; }
+  .home-empty p { margin: 8px 0 16px; font-size: 16px; }
+
+  .home-info-strip {
+    padding: 64px 0 0;
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 960px;
+  }
+  .info-strip-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .info-strip-heading > p { max-width: 520px; margin: 0; color: var(--text-secondary); font-size: 14px; text-align: right; }
+  .info-strip-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-bottom: 1px solid var(--border); }
+  .info-block { min-width: 0; padding: 32px 0; }
+  .info-block + .info-block { padding-left: 40px; margin-left: 40px; border-left: 1px solid var(--border); }
+  .info-block-heading { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+  .info-block-heading > span, .info-fold > summary > span { color: var(--accent-tertiary); font-size: 12px; font-weight: 700; }
+  .info-block-heading h3 { margin: 0; color: var(--text-primary); font-size: 20px; }
+  .info-block-heading p { margin: 4px 0 0; color: var(--text-secondary); font-size: 14px; }
+  .language-grid { display: block; }
+  .language-grid > :global(*) { min-width: 0; }
+  .language-block :global(.lang-card) { width: 100%; max-width: none; padding: 0; margin: 0; background: transparent; border: 0; box-shadow: none; }
+  .language-block :global(.lang-title) { margin-bottom: 12px; color: var(--text-secondary); font-size: 14px; text-align: left; }
+  .language-block :global(.lang-chart-row) { gap: 12px; }
+  .language-block :global(.lang-pie) { width: 112px; height: 112px; }
+  .language-block :global(.lang-legend) { gap: 3px; font-size: 11px; }
+  .language-block :global(.lang-total) { margin-top: 8px; font-size: 12px; }
+  .status-block .status-refresh { flex: 0 0 auto; margin-left: auto; }
+  .status-block :global(.system-status-grid) { gap: 8px; }
+  .status-block :global(.system-card) { min-height: 0; padding: 12px; background: color-mix(in srgb, var(--state-bg) 54%, transparent); border-radius: 8px; }
+  .status-block :global(.system-card p) { margin-top: 6px; font-size: 12px; }
+  .status-block :global(.system-card small), .status-block :global(.system-card a) { font-size: 11px; }
+
+  .info-folds { display: grid; }
+  .info-fold { border-bottom: 1px solid var(--border); }
+  .info-fold > summary { display: grid; grid-template-columns: 32px minmax(180px, auto) minmax(0, 1fr); align-items: center; gap: 16px; padding: 20px 0; cursor: pointer; list-style: none; }
+  .info-fold > summary::-webkit-details-marker, .maintenance-entry > summary::-webkit-details-marker { display: none; }
+  .info-fold > summary::after { content: '+'; justify-self: end; color: var(--accent); font-size: 20px; transition: transform 180ms cubic-bezier(.23,1,.32,1); }
+  .info-fold[open] > summary::after { transform: rotate(45deg); }
+  .info-fold > summary strong { color: var(--text-primary); font-size: 16px; }
+  .info-fold > summary small { color: var(--text-secondary); font-size: 14px; }
+  .maintenance-list { max-height: 360px; overflow-y: auto; padding: 0 0 24px 48px; }
+  .maintenance-entry {
+    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 52px;
+  }
+  .maintenance-entry > summary { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 16px; padding: 14px 0; cursor: pointer; list-style: none; }
+  .maintenance-entry time { color: var(--accent); font-size: 12px; }
+  .maintenance-entry > summary span { color: var(--text-primary); font-size: 14px; font-weight: 650; }
+  .maintenance-body { padding: 0 0 16px 106px; color: var(--text-secondary); font-size: 14px; line-height: 1.65; }
+  .maintenance-body :global(p), .maintenance-body :global(ul) { margin: 8px 0 0; }
+  .maintenance-archive-link { display: inline-flex; margin: 14px 0 0 106px; color: var(--accent); font-size: 13px; font-weight: 650; text-decoration: none; }
+  .contribution-content { padding: 0 0 32px 48px; }
+  .contribution-content :global(.gh-contributions) { width: 100%; max-width: none; margin: 0; padding: 0; background: transparent; border: 0; border-radius: 0; }
+  .contribution-content :global(.gh-contributions > .stat-label) { display: none; }
+  .contribution-content :global(.gh-grid-wrapper) { padding: 16px 0; background: transparent; border: 0; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cover-expand-toggle:hover { background: rgba(8, 12, 14, .48); border-color: #fff; }
+    .home-post-card { transition: transform 180ms cubic-bezier(.23,1,.32,1), border-color 180ms ease, box-shadow 180ms ease; }
+    .home-post-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); box-shadow: 0 12px 32px color-mix(in srgb, var(--text-primary) 9%, transparent); }
+    .home-post-card:hover .home-post-media :global(img) { transform: scale(1.025); }
+  }
+
+  @media (max-width: 900px) {
+    .home-content-layout { width: min(100% - 32px, 760px); margin-top: 32px; }
+    .home-post-link { grid-template-columns: clamp(210px, 36%, 260px) minmax(0, 1fr); }
+    .home-post-copy { padding: 24px; }
+    .info-strip-grid { grid-template-columns: 1fr; }
+    .info-block + .info-block { padding-left: 0; margin-left: 0; border-top: 1px solid var(--border); border-left: 0; }
+  }
+
+  @media (max-width: 640px) {
+    .home-page { padding-bottom: 48px; }
+    .home-cover-shell { min-height: clamp(380px, 108vw, 460px); }
+    .home-cover { min-height: inherit; }
+    .cover-photo-frame :global(.cover-photo) { object-position: 44% 50%; }
+    :global([data-theme='dark']) .cover-photo-frame :global(.cover-photo) { object-position: 63% 50%; }
+    .cover-photo-overlay,
+    .cover-full-stage::after {
+      background:
+        linear-gradient(90deg, rgba(12, 17, 19, .72) 0%, rgba(12, 17, 19, .42) 42%, rgba(12, 17, 19, .08) 78%),
+        linear-gradient(180deg, rgba(12, 17, 19, .08) 38%, rgba(12, 17, 19, .5) 100%);
+    }
+    .cover-copy { align-self: start; width: min(240px, calc(100% - 32px)); margin: 0 auto 0 16px; padding: 56px 16px 0; text-align: left; }
+    .cover-copy .home-eyebrow { max-width: 100%; font-size: 10px; line-height: 1.5; letter-spacing: .1em; white-space: normal; overflow-wrap: anywhere; }
+    .cover-copy h1 { font-size: 30px; letter-spacing: .02em; }
+    .cover-copy > p:last-child { font-size: 14px; line-height: 1.7; }
+    .cover-waves { height: clamp(56px, 12dvh, 96px); }
+    .cover-expand-toggle { background: rgba(8, 12, 14, .58); }
+    .home-content-layout { width: calc(100% - 32px); margin-top: 28px; }
+    .recent-section { padding-bottom: 48px; }
+    .home-info-strip { padding-top: 48px; }
+    .section-heading, .info-strip-heading { align-items: flex-start; }
+    .section-heading h2, .info-strip-heading h2 { font-size: 24px; }
+    .section-link { margin-top: 30px; }
+    .info-strip-heading { display: block; }
+    .info-strip-heading > p { margin-top: 12px; text-align: left; }
+    .home-post-link { display: block; min-height: 0; }
+    .home-post-media { min-height: 148px; }
+    .document-preview { padding: 18px; }
+    .document-sheet { width: min(220px, 86%); min-height: 118px; padding: 18px; }
+    .document-kicker { margin-bottom: 14px; }
+    .document-chip { margin-top: 14px; }
+    .home-post-copy { padding: 24px 20px; }
+    .home-post-copy h3 { font-size: 20px; }
+    .language-grid { grid-template-columns: 1fr; }
+    .language-grid > :global(*) + :global(*) { padding-top: 24px; border-top: 1px solid var(--border); }
+    .info-fold > summary { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 12px; }
+    .info-fold > summary small { display: none; }
+    .maintenance-list, .contribution-content { padding-left: 0; }
+    .maintenance-entry > summary { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; }
+    .maintenance-body, .maintenance-archive-link { margin-left: 0; padding-left: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cover-wave-layer { animation: none; }
+    .cover-expand-toggle, .cover-expand-toggle svg, .home-post-card, .home-post-media :global(img), .info-fold > summary::after { transition-duration: 0ms; }
+  }
+
+  @keyframes cover-wave-drift {
+    from { transform: translate3d(-96px, 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
+  }
+</style>
