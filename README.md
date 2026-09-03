@@ -32,6 +32,8 @@ pnpm run build
 
 推送 `main` 分支后，GitHub Actions 会执行检查、测试、构建并部署 GitHub Pages。
 
+`SITE_URL` 与 `SITE_BASE` 可在其他托管环境覆盖；未设置时默认使用 GitHub Pages 地址和 `/GUET_428` 子路径。
+
 管理台当前只支持本地草稿与文件导出。GUET_428 尚未配置独立 Worker、KV 或 GitHub OAuth，因此云端写入保持禁用。
 
 ## 源码说明

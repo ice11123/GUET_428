@@ -19,9 +19,13 @@ import compress from 'astro-compress';
 import { remarkMermaid } from './src/plugins/remark-mermaid';
 import { remarkGithubAlerts } from './src/plugins/remark-github-alerts';
 import { remarkSubSuper } from './src/plugins/remark-sub-super';
+
+const siteUrl = process.env.SITE_URL?.trim() || 'https://ice11123.github.io';
+const basePath = process.env.SITE_BASE?.trim() || '/GUET_428';
+
 export default defineConfig({
-  site: 'https://ice11123.github.io',
-  base: '/GUET_428',
+  site: siteUrl,
+  base: basePath,
   outDir: './dist',
 
   integrations: [
