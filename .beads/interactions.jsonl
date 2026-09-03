@@ -1,0 +1,1 @@
+{"id":"int-9afdb6b8b27c80ca818feadcbe5b3f06","kind":"field_change","created_at":"2026-09-03T11:16:21.3473896Z","actor":"ice11123","issue_id":"guet428-qj1","extra":{"field":"status","new_value":"closed","old_value":"in_progress","reason":"GUET_428 已从 blog_test2 独立复制并完成实验室化改造；个人元素已移除，亮色红金主题已加入蓝色，GitHub Pages 与 Sites 均发布并验证成功。"}}
