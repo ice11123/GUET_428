@@ -1,12 +1,15 @@
 # GUET_428 管理同步 Worker
 
-此 Worker 目前只保留代码骨架，尚未部署，也没有可复用的线上地址。
+此 Worker 已作为 GUET_428 独立服务部署：
+
+`https://guet-428-admin-api.2799587522.workers.dev`
+
+它已绑定独立 KV，健康检查和公开仓库/部署状态可用；OAuth 写入在下列密钥配置完成前保持关闭。
 
 正式启用前必须单独完成以下配置：
 
-1. 为 GUET_428 创建独立 KV namespace，并替换 `wrangler.toml` 中的占位符。
-2. 创建独立 GitHub OAuth App，回调路径固定为 `https://ice11123.github.io/GUET_428/admin/`。
-3. 配置 `GITHUB_OAUTH_CLIENT_ID`、`GITHUB_OAUTH_CLIENT_SECRET` 和 `SESSION_SECRET`。
-4. 验证写入目标仅为 `ice11123/GUET_428` 的 `main` 分支。
+1. 创建独立 GitHub OAuth App，回调路径固定为 `https://guet-428-admin-api.2799587522.workers.dev/auth/callback`。
+2. 配置 `GITHUB_OAUTH_CLIENT_ID` 和 `GITHUB_OAUTH_CLIENT_SECRET`；`SESSION_SECRET` 已独立生成。
+3. 验证写入目标仅为 `ice11123/GUET_428` 的 `main` 分支。
 
 在这些条件全部满足前，主站必须保持 `PUBLIC_CLOUD_PUBLISH_ENABLED=false`，管理台只使用本地草稿和文件导出。

@@ -330,14 +330,23 @@ test('主页壁纸支持可访问的点击、触屏手势与桌面滚轮展开',
   assert.match(home, /\.home-drawer\s*\{[^}]*display:\s*flow-root/);
 });
 
-test('GUET_428 未配置旧 Worker 且云端写入保持关闭', () => {
+test('GUET_428 使用独立 Worker，OAuth 未完成前云端写入保持关闭', () => {
   const constants = readSource('consts.ts');
   const workflow = readFileSync(join(srcRoot, '..', '.github', 'workflows', 'deploy.yml'), 'utf8');
 
   assert.match(constants, /import\.meta\.env\.PUBLIC_ADMIN_SYNC_API_URL/);
   assert.match(constants, /import\.meta\.env\.PUBLIC_CLOUD_PUBLISH_ENABLED\s*===\s*'true'/);
-  assert.doesNotMatch(workflow, /PUBLIC_ADMIN_SYNC_API_URL|blog-test2-admin-api/);
+  assert.match(workflow, /PUBLIC_ADMIN_SYNC_API_URL:\s*'https:\/\/guet-428-admin-api\.2799587522\.workers\.dev'/);
+  assert.doesNotMatch(workflow, /blog-test2-admin-api/);
   assert.match(workflow, /PUBLIC_CLOUD_PUBLISH_ENABLED:\s*'false'/);
+});
+
+test('管理台加载完整状态卡样式，首页状态名称面向公开网站', () => {
+  const admin = readSource('pages/admin/index.astro');
+  const publicStatus = readSource('components/home/PublicStatus.astro');
+  assert.match(admin, /import ['"]\.\.\/\.\.\/styles\/system-status\.scss['"]/);
+  assert.match(publicStatus, /\['frontend', '网站前端'/);
+  assert.doesNotMatch(publicStatus, /管理台前端/);
 });
 
 test('首页维护记录有固定上限并提供完整归档页', () => {

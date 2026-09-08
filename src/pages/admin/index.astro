@@ -7,6 +7,7 @@ import katexCss from 'katex/dist/katex.min.css?url';
 import { ADMIN_SYNC_API_URL, CLOUD_PUBLISH_ENABLED, SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 import type { AdminPostDraft } from '../../lib/adminDrafts';
 import { resolveDirs } from '../../lib/utils';
+import '../../styles/system-status.scss';
 
 const posts = await getCollection('blog');
 const initialDrafts: AdminPostDraft[] = posts.map((post) => {
@@ -51,7 +52,7 @@ const systemCards = [
       <section id="admin-app" data-initial-drafts={JSON.stringify(initialDrafts)} data-sync-endpoint={ADMIN_SYNC_API_URL} data-publish-enabled={String(CLOUD_PUBLISH_ENABLED)}>
         <div class="admin-overview">
           <section class="admin-intro">
-            <p class="admin-kicker">ADMIN PROTOTYPE</p>
+            <p class="admin-kicker">GUET 428</p>
             <h1>博客管理台</h1>
             <p class="admin-description">编辑网站中的文章、标签和目录，保存本地草稿，并通过 GitHub 授权发布到正式网站。</p>
             <div class="admin-warning" role="note">
@@ -113,7 +114,7 @@ const systemCards = [
               <button type="button" data-new>新建文章</button>
               <button type="button" data-reset>恢复仓库内容</button>
               <button type="button" data-export>导出当前文件</button>
-              <button type="button" class="sync-button" data-cloud-publish disabled title="GUET_428 尚未接入独立云端发布服务">发布到正式网站（暂未启用）</button>
+              <button type="button" class="sync-button" data-cloud-publish disabled={!CLOUD_PUBLISH_ENABLED} title={CLOUD_PUBLISH_ENABLED ? '通过 GitHub 授权提交到 GUET_428' : '发布授权尚未配置完成，可先保存或导出草稿'}>{CLOUD_PUBLISH_ENABLED ? '发布到正式网站' : '发布到正式网站（待配置授权）'}</button>
             </div>
           </div>
 
@@ -157,7 +158,7 @@ const systemCards = [
                   <button type="button" data-delete>删除当前文章</button>
                   <span class="edited-at" data-edited-at>尚未修改</span>
                 </div>
-                <p class="sync-hint">当前为视觉实验版，仅支持本地草稿与导出；云端发布已禁用，不会请求 OAuth、Worker 或 GitHub 写接口。</p>
+                <p class="sync-hint">{CLOUD_PUBLISH_ENABLED ? '发布需要 GitHub 管理员授权；确认后提交到 GUET_428，随后自动更新正式网站。' : '发布授权尚未启用；可保存本地草稿和导出文件。服务状态检测为只读，不会修改仓库。'}</p>
               </form>
             </section>
 

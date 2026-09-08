@@ -2,13 +2,12 @@ name = "guet-428-admin-api"
 main = "src/index.js"
 compatibility_date = "2026-08-12"
 
-# GUET_428 尚未部署独立 Worker。
+# GUET_428 使用独立 Worker 和独立 KV，不共享个人博客的发布资源。
 # routes 不绑定主站，避免把管理 API 混入静态站点。
 
 [[kv_namespaces]]
 binding = "SESSIONS"
-# 部署前必须创建 GUET_428 独立 KV，并替换此占位符。
-id = "YOUR_GUET_428_KV_NAMESPACE_ID"
+id = "3f99d781aeb641d08343c0ca7a1892af"
 
 [vars]
 ALLOWED_ORIGIN = "https://ice11123.github.io"

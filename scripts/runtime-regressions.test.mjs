@@ -5,6 +5,8 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import * as draftModule from '../src/lib/adminDrafts.ts';
 import * as gestureModule from '../src/lib/homeCoverGesture.ts';
+import * as statusModule from '../src/lib/publicStatusRequest.ts';
+import { normalizeDeploymentStatus } from '../src/lib/deploymentStatus.js';
 
 // 执行实际浏览器模块，仅替换 DOM、下载和外部渲染边界，避免测试复制业务逻辑。
 function loadRuntime(relativePath, globals = {}, dependencies = {}, exposed = '') {
@@ -49,6 +51,36 @@ class ElementStub {
   getAttribute(_name) { return null; }
   removeAttribute() {}
 }
+
+test('首页 GitHub 直连成功时显示正常，而不是等待', async () => {
+  const cards = Object.fromEntries(['frontend', 'worker', 'repository', 'deployment'].map((name) => {
+    const card = new ElementStub();
+    const nodes = new Map();
+    card.querySelector = (selector) => {
+      if (!nodes.has(selector)) nodes.set(selector, new ElementStub());
+      return nodes.get(selector);
+    };
+    return [name, card];
+  }));
+  const root = new ElementStub();
+  root.closest = () => null;
+  root.querySelector = (selector) => cards[selector.match(/data-public-card="([^"]+)"/)?.[1]];
+  const document = new ElementStub();
+  document.querySelector = () => root;
+  loadRuntime('../src/scripts/public-status.ts', { document, window: {} }, {
+    '../lib/publicStatusRequest': statusModule,
+    '../lib/deploymentStatus.js': { normalizeDeploymentStatus },
+    '../lib/publicDataFetch': {
+      fetchPriorityPublicData: async (url) => String(url).includes('/git/ref/')
+        ? Response.json({ object: { sha: 'abcdef1234567' } })
+        : Response.json({ workflow_runs: [{ status: 'completed', conclusion: 'success' }] }),
+    },
+  });
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.equal(cards.repository.dataset.state, 'ok');
+  assert.equal(cards.deployment.dataset.state, 'ok');
+  assert.equal(cards.deployment.querySelector('[data-card-state]').textContent, '正常');
+});
 
 function mountEditor(t, empty = false) {
   const values = new Map();

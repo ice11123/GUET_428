@@ -11,7 +11,8 @@ permissions:
   id-token: write
 
 env:
-  # GUET_428 尚未配置独立 Worker；管理台仅保留本地草稿与导出能力。
+  PUBLIC_ADMIN_SYNC_API_URL: 'https://guet-428-admin-api.2799587522.workers.dev'
+  # GitHub OAuth 密钥尚未配置完成，先启用只读状态服务。
   PUBLIC_CLOUD_PUBLISH_ENABLED: 'false'
 
 concurrency:
