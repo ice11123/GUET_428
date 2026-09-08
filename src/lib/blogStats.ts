@@ -1,6 +1,7 @@
 import type { CollectionEntry } from 'astro:content';
 import { SITE_START_DATE } from '../consts';
 import { countWords } from './utils';
+import { LAB_GROUPS } from '../config/labGroups.ts';
 
 export interface SiteStats {
   totalArticles: number;
@@ -16,16 +17,13 @@ export function computeSiteStats(allPosts: CollectionEntry<'blog'>[]): SiteStats
   const totalArticles = allPosts.length;
 
   const allTags = new Set<string>();
-  const allCategories = new Set<string>();
   for (const post of allPosts) {
     for (const tag of post.data.tags || []) {
       allTags.add(tag);
     }
-    const segs = post.id.split('/');
-    if (segs.length > 0) allCategories.add(segs[0]);
   }
   const totalTags = allTags.size;
-  const totalCategories = allCategories.size;
+  const totalCategories = LAB_GROUPS.length;
 
   const daysSinceLaunch = Math.floor((Date.now() - SITE_START_DATE.getTime()) / 86400000);
 

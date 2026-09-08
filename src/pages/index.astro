@@ -1,16 +1,12 @@
 ---
 import { getCollection } from 'astro:content';
-import { getImage, Image } from 'astro:assets';
-import { INSTITUTION_NAME, LAB_NAME, PROGRAM_NAME, SITE_DESCRIPTION, SITE_TITLE, fmtNum } from '../consts';
-import { computeSiteStats } from '../lib/blogStats';
-import { getRepoLanguages } from '../lib/repoStats';
+import { getImage } from 'astro:assets';
+import { INSTITUTION_NAME, LAB_NAME, PROGRAM_NAME, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { parseMaintenance } from '../lib/maintenance';
 import PublicLayout from '../layouts/PublicLayout.astro';
 import JsonLd from '../components/blog/JsonLd.astro';
-import FormattedDate from '../components/blog/FormattedDate.astro';
-import GitHubRepoStats from '../components/github/GitHubRepoStats.astro';
-import PublicStatus from '../components/home/PublicStatus.astro';
-import { blogPostPath, withBase } from '../lib/urls';
+import LabGroupShowcase from '../components/home/LabGroupShowcase.astro';
+import { withBase } from '../lib/urls';
 import maintenanceSource from '../content/maintenance.md?raw';
 import homeHeroImage from '../assets/lab-hero.png';
 
@@ -61,14 +57,8 @@ const websiteLd = {
 };
 
 const allPosts = await getCollection('blog');
-const recentPosts = allPosts
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
-
-const stats = computeSiteStats(allPosts);
-const { repoLanguages, totalRepoLines } = getRepoLanguages();
 const maintenanceEntries = await parseMaintenance(maintenanceSource);
-const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
+const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
 ---
 
 <PublicLayout title={SITE_TITLE} description={SITE_DESCRIPTION} image={homeHeroImage} sidebarMode="hidden">
@@ -191,118 +181,39 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
         </g>
       </svg>
       <div class="home-content-layout">
-      <div class="home-main-column">
-    <section class="recent-section" aria-labelledby="recent-title">
-      <header class="section-heading">
-        <div>
-          <p class="section-kicker">RECENT WRITING</p>
-          <h2 id="recent-title">近期文章</h2>
+        <div class="home-main-column">
+          <LabGroupShowcase posts={allPosts} />
+
+          <section class="maintenance-section" aria-labelledby="maintenance-home-title">
+            <header class="maintenance-heading">
+              <div>
+                <p class="section-kicker">SITE CHANGELOG</p>
+                <h2 id="maintenance-home-title">维护公告</h2>
+              </div>
+              <a href={withBase('/maintenance/')}>查看完整记录 <span aria-hidden="true">→</span></a>
+            </header>
+
+            {recentMaintenanceEntries.length > 0 ? (
+              <div class="maintenance-list">
+                {recentMaintenanceEntries.map((entry) => (
+                  <details class="maintenance-entry">
+                    <summary>
+                      <time datetime={entry.date}>{entry.date}</time>
+                      <strong>{entry.title}</strong>
+                      <span aria-hidden="true"></span>
+                    </summary>
+                    <div class="maintenance-body" set:html={entry.html}></div>
+                  </details>
+                ))}
+              </div>
+            ) : (
+              <div class="maintenance-empty">
+                <strong>暂无维护公告</strong>
+                <p>新的功能调整与修复记录会显示在这里。</p>
+              </div>
+            )}
+          </section>
         </div>
-        <a class="section-link" href={withBase('/blog/')}>查看全部文章 <span aria-hidden="true">→</span></a>
-      </header>
-
-      {recentPosts.length > 0 ? (
-        <div class="recent-list">
-          {recentPosts.map((post) => (
-            <article class="home-post-card">
-              <a class="home-post-link" href={blogPostPath(post.id)}>
-                <div class="home-post-media">
-                  {post.data.heroImage ? (
-                    <Image src={post.data.heroImage} width={720} height={420} alt={post.data.title} />
-                  ) : (
-                    <div class="document-preview" aria-hidden="true">
-                      <div class="document-sheet">
-                        <span class="document-kicker">ARTICLE NOTE</span>
-                        <span class="document-rule document-rule-long"></span>
-                        <span class="document-rule"></span>
-                        <span class="document-rule document-rule-short"></span>
-                        <span class="document-chip">{post.data.dir1 || '实验室记录'}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div class="home-post-copy">
-                  <div class="post-meta-line">
-                    <span>{post.data.dir1 || '未分类'}</span>
-                    <time datetime={post.data.pubDate.toISOString()}><FormattedDate date={post.data.pubDate} /></time>
-                  </div>
-                  <h3>{post.data.title}</h3>
-                  <p>{post.data.description.replace(/<[^>]+>/g, '')}</p>
-                  {post.data.tags.length > 0 && (
-                    <div class="post-tags" aria-label="文章标签">
-                      {post.data.tags.slice(0, 3).map((tag) => <span>{tag}</span>)}
-                    </div>
-                  )}
-                  <span class="post-more">继续阅读 <span aria-hidden="true">↗</span></span>
-                </div>
-              </a>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div class="home-empty">
-          <strong>文章正在整理中</strong>
-          <p>这里会展示最近发布的内容。你也可以先进入博客列表查看分类结构。</p>
-          <a href={withBase('/blog/')}>浏览博客</a>
-        </div>
-      )}
-    </section>
-
-    <section class="home-info-strip" aria-labelledby="site-info-title">
-      <header class="info-strip-heading">
-        <div>
-          <p class="section-kicker">SITE NOTES</p>
-          <h2 id="site-info-title">站点信息</h2>
-        </div>
-        <p>
-          已运行 {stats.daysSinceLaunch} 天 · 累计 {fmtNum(stats.totalWords)} 字 · 仓库 {fmtNum(totalRepoLines)} 行代码
-        </p>
-      </header>
-
-      <div class="info-strip-grid">
-        <section class="info-block language-block" aria-labelledby="language-title">
-          <div class="info-block-heading">
-            <span>01</span>
-            <div><h3 id="language-title">站点技术构成</h3><p>GUET_428 网站仓库</p></div>
-          </div>
-          <div class="language-grid">
-            <GitHubRepoStats languages={repoLanguages} totalLines={totalRepoLines} />
-          </div>
-        </section>
-
-        <section class="info-block status-block" aria-label="系统状态">
-          <div class="info-block-heading">
-            <span>02</span>
-            <div><h3>运行状态</h3><p>按需检测，不持续轮询</p></div>
-            <button type="button" class="status-refresh" data-public-status-refresh aria-controls="public-status-grid" aria-label="重新检测系统状态">
-              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span data-public-status-refresh-label>刷新</span>
-            </button>
-          </div>
-          <PublicStatus />
-        </section>
-      </div>
-
-      <div class="info-folds">
-        {maintenanceEntries.length > 0 && (
-          <details class="info-fold maintenance-fold" open>
-            <summary><span>03</span><strong>近期维护公告</strong><small>查看最近的功能调整与修复</small></summary>
-            <div class="maintenance-list">
-              {recentMaintenanceEntries.map((entry, index) => (
-                <details class="maintenance-entry" open={index === 0}>
-                  <summary><time datetime={entry.date}>{entry.date}</time><span>{entry.title}</span></summary>
-                  <div class="maintenance-body" set:html={entry.html}></div>
-                </details>
-              ))}
-              {maintenanceEntries.length > recentMaintenanceEntries.length && (
-                <a class="maintenance-archive-link" href={withBase('/maintenance/')}>查看全部 {maintenanceEntries.length} 条维护记录 →</a>
-              )}
-            </div>
-          </details>
-        )}
-
-      </div>
-    </section>
       </div>
     </div>
     </div>
@@ -523,103 +434,70 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
   .home-content-layout { position: relative; z-index: 4; width: min(1080px, calc(100% - 48px)); margin: 40px auto 0; }
   .home-main-column { min-width: 0; }
   .home-drawer { position: relative; z-index: 4; display: flow-root; min-width: 0; background: var(--canvas); }
-  .section-link:focus-visible, .home-post-link:focus-visible, .info-fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+  .maintenance-heading a:focus-visible,
+  .maintenance-entry > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 
-  .recent-section { padding: 0 0 64px; border-bottom: 1px solid var(--border); }
-  .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
-  .section-heading h2, .info-strip-heading h2 { margin: 0; color: var(--text-primary); font-size: 28px; line-height: 1.25; }
-  .section-link { color: var(--accent); font-size: 14px; font-weight: 650; }
-  .recent-list { display: grid; gap: 24px; }
-  .home-post-card { overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-  .home-post-link { display: grid; grid-template-columns: clamp(220px, 31%, 320px) minmax(0, 1fr); min-height: 210px; color: inherit; }
-  .home-post-media { position: relative; min-height: 210px; overflow: hidden; background: linear-gradient(145deg, color-mix(in srgb, var(--surface-subtle) 88%, var(--accent) 12%), color-mix(in srgb, var(--surface) 94%, var(--accent) 6%)); }
-  .home-post-media :global(img) { width: 100%; height: 100%; object-fit: cover; border-radius: 0; transition: transform 220ms cubic-bezier(.23,1,.32,1); }
-  .document-preview { display: grid; width: 100%; height: 100%; min-height: inherit; place-items: center; padding: 24px; box-sizing: border-box; }
-  .document-sheet { position: relative; display: flex; flex-direction: column; width: min(190px, 84%); min-height: 138px; box-sizing: border-box; padding: 22px 20px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1px solid color-mix(in srgb, var(--border) 76%, transparent); border-radius: 10px; box-shadow: 0 14px 28px color-mix(in srgb, var(--text-primary) 9%, transparent); transform: rotate(-2deg); }
-  .document-sheet::before { content: ''; position: absolute; top: -1px; right: 22px; width: 28px; height: 4px; background: var(--accent); border-radius: 0 0 4px 4px; }
-  .document-kicker { margin-bottom: 20px; color: var(--accent); font-size: 9px; font-weight: 750; letter-spacing: .14em; }
-  .document-rule { display: block; width: 72%; height: 5px; margin-top: 9px; background: color-mix(in srgb, var(--text-secondary) 25%, transparent); border-radius: 999px; }
-  .document-rule-long { width: 100%; margin-top: 0; background: color-mix(in srgb, var(--text-primary) 34%, transparent); }
-  .document-rule-short { width: 48%; }
-  .document-chip { align-self: flex-start; max-width: 100%; overflow: hidden; margin-top: 20px; padding: 3px 8px; color: var(--text-secondary); background: var(--surface-subtle); border-radius: 999px; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-  .home-post-copy { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 32px 40px; }
-  .post-meta-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; color: var(--text-secondary); font-size: 12px; }
-  .post-meta-line > span { color: var(--accent); font-weight: 650; }
-  .home-post-copy h3 { margin: 12px 0 0; color: var(--text-primary); font-size: 20px; line-height: 1.4; }
-  .home-post-copy > p { display: -webkit-box; overflow: hidden; margin: 12px 0 0; color: var(--text-secondary); font-size: 16px; line-height: 1.65; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-  .post-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-  .post-tags span { padding: 3px 9px; color: var(--text-secondary); background: var(--surface-subtle); border-radius: 999px; font-size: 12px; }
-  .post-more { margin-top: 20px; color: var(--accent); font-size: 14px; font-weight: 650; }
-  .home-empty { padding: 32px; color: var(--text-secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .home-empty strong { color: var(--text-primary); font-size: 20px; }
-  .home-empty p { margin: 8px 0 16px; font-size: 16px; }
-
-  .home-info-strip {
-    padding: 64px 0 0;
+  .maintenance-section {
+    padding: 64px 0 24px;
+    border-top: 1px solid var(--border);
     content-visibility: auto;
-    contain-intrinsic-block-size: auto 960px;
+    contain-intrinsic-block-size: auto 380px;
   }
-  .info-strip-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
-  .info-strip-heading > p { max-width: 520px; margin: 0; color: var(--text-secondary); font-size: 14px; text-align: right; }
-  .info-strip-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-bottom: 1px solid var(--border); }
-  .info-block { min-width: 0; padding: 32px 0; }
-  .info-block + .info-block { padding-left: 40px; margin-left: 40px; border-left: 1px solid var(--border); }
-  .info-block-heading { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
-  .info-block-heading > span, .info-fold > summary > span { color: var(--accent-tertiary); font-size: 12px; font-weight: 700; }
-  .info-block-heading h3 { margin: 0; color: var(--text-primary); font-size: 20px; }
-  .info-block-heading p { margin: 4px 0 0; color: var(--text-secondary); font-size: 14px; }
-  .language-grid { display: block; }
-  .language-grid > :global(*) { min-width: 0; }
-  .language-block :global(.lang-card) { width: 100%; max-width: none; padding: 0; margin: 0; background: transparent; border: 0; box-shadow: none; }
-  .language-block :global(.lang-title) { margin-bottom: 12px; color: var(--text-secondary); font-size: 14px; text-align: left; }
-  .language-block :global(.lang-chart-row) { gap: 12px; }
-  .language-block :global(.lang-pie) { width: 112px; height: 112px; }
-  .language-block :global(.lang-legend) { gap: 3px; font-size: 11px; }
-  .language-block :global(.lang-total) { margin-top: 8px; font-size: 12px; }
-  .status-block .status-refresh { flex: 0 0 auto; margin-left: auto; }
-  .status-block :global(.system-status-grid) { gap: 8px; }
-  .status-block :global(.system-card) { min-height: 0; padding: 12px; background: color-mix(in srgb, var(--state-bg) 54%, transparent); border-radius: 8px; }
-  .status-block :global(.system-card p) { margin-top: 6px; font-size: 12px; }
-  .status-block :global(.system-card small), .status-block :global(.system-card a) { font-size: 11px; }
-
-  .info-folds { display: grid; }
-  .info-fold { border-bottom: 1px solid var(--border); }
-  .info-fold > summary { display: grid; grid-template-columns: 32px minmax(180px, auto) minmax(0, 1fr); align-items: center; gap: 16px; padding: 20px 0; cursor: pointer; list-style: none; }
-  .info-fold > summary::-webkit-details-marker, .maintenance-entry > summary::-webkit-details-marker { display: none; }
-  .info-fold > summary::after { content: '+'; justify-self: end; color: var(--accent); font-size: 20px; transition: transform 180ms cubic-bezier(.23,1,.32,1); }
-  .info-fold[open] > summary::after { transform: rotate(45deg); }
-  .info-fold > summary strong { color: var(--text-primary); font-size: 16px; }
-  .info-fold > summary small { color: var(--text-secondary); font-size: 14px; }
-  .maintenance-list { max-height: 360px; overflow-y: auto; padding: 0 0 24px 48px; }
+  .maintenance-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+  .maintenance-heading h2 { margin: 0; color: var(--text-primary); font-size: 28px; line-height: 1.25; }
+  .maintenance-heading a { color: var(--accent); font-size: 14px; font-weight: 700; }
+  .maintenance-list { border-top: 1px solid var(--border); }
   .maintenance-entry {
-    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    border-bottom: 1px solid var(--border);
     content-visibility: auto;
-    contain-intrinsic-block-size: auto 52px;
+    contain-intrinsic-block-size: auto 64px;
   }
-  .maintenance-entry > summary { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 16px; padding: 14px 0; cursor: pointer; list-style: none; }
-  .maintenance-entry time { color: var(--accent); font-size: 12px; }
-  .maintenance-entry > summary span { color: var(--text-primary); font-size: 14px; font-weight: 650; }
-  .maintenance-body { padding: 0 0 16px 106px; color: var(--text-secondary); font-size: 14px; line-height: 1.65; }
+  .maintenance-entry > summary {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr) 28px;
+    align-items: center;
+    gap: 18px;
+    min-height: 64px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .maintenance-entry > summary::-webkit-details-marker { display: none; }
+  .maintenance-entry time { color: var(--accent); font-size: 12px; font-weight: 700; }
+  .maintenance-entry > summary strong { color: var(--text-primary); font-size: 15px; }
+  .maintenance-entry > summary > span {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    transition: transform 180ms cubic-bezier(.23, 1, .32, 1), border-color 180ms ease;
+  }
+  .maintenance-entry > summary > span::before,
+  .maintenance-entry > summary > span::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 1.5px;
+    background: var(--accent);
+    transform: translate(-50%, -50%);
+  }
+  .maintenance-entry > summary > span::after { transform: translate(-50%, -50%) rotate(90deg); }
+  .maintenance-entry[open] > summary > span { transform: rotate(45deg); border-color: color-mix(in srgb, var(--accent) 62%, var(--border)); }
+  .maintenance-body { padding: 0 46px 22px 122px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
   .maintenance-body :global(p), .maintenance-body :global(ul) { margin: 8px 0 0; }
-  .maintenance-archive-link { display: inline-flex; margin: 14px 0 0 106px; color: var(--accent); font-size: 13px; font-weight: 650; text-decoration: none; }
-  .contribution-content { padding: 0 0 32px 48px; }
-  .contribution-content :global(.gh-contributions) { width: 100%; max-width: none; margin: 0; padding: 0; background: transparent; border: 0; border-radius: 0; }
-  .contribution-content :global(.gh-contributions > .stat-label) { display: none; }
-  .contribution-content :global(.gh-grid-wrapper) { padding: 16px 0; background: transparent; border: 0; }
+  .maintenance-empty { padding: 28px 0; color: var(--text-secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .maintenance-empty strong { color: var(--text-primary); font-size: 16px; }
+  .maintenance-empty p { margin: 6px 0 0; font-size: 14px; }
 
   @media (hover: hover) and (pointer: fine) {
     .cover-expand-toggle:hover { background: rgba(8, 12, 14, .48); border-color: #fff; }
-    .home-post-card { transition: transform 180ms cubic-bezier(.23,1,.32,1), border-color 180ms ease, box-shadow 180ms ease; }
-    .home-post-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); box-shadow: 0 12px 32px color-mix(in srgb, var(--text-primary) 9%, transparent); }
-    .home-post-card:hover .home-post-media :global(img) { transform: scale(1.025); }
+    .maintenance-entry > summary:hover > span { border-color: color-mix(in srgb, var(--accent) 62%, var(--border)); }
   }
 
   @media (max-width: 900px) {
     .home-content-layout { width: min(100% - 32px, 760px); margin-top: 32px; }
-    .home-post-link { grid-template-columns: clamp(210px, 36%, 260px) minmax(0, 1fr); }
-    .home-post-copy { padding: 24px; }
-    .info-strip-grid { grid-template-columns: 1fr; }
-    .info-block + .info-block { padding-left: 0; margin-left: 0; border-top: 1px solid var(--border); border-left: 0; }
   }
 
   @media (max-width: 640px) {
@@ -641,33 +519,17 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
     .cover-waves { height: clamp(56px, 12dvh, 96px); }
     .cover-expand-toggle { background: rgba(8, 12, 14, .58); }
     .home-content-layout { width: calc(100% - 32px); margin-top: 28px; }
-    .recent-section { padding-bottom: 48px; }
-    .home-info-strip { padding-top: 48px; }
-    .section-heading, .info-strip-heading { align-items: flex-start; }
-    .section-heading h2, .info-strip-heading h2 { font-size: 24px; }
-    .section-link { margin-top: 30px; }
-    .info-strip-heading { display: block; }
-    .info-strip-heading > p { margin-top: 12px; text-align: left; }
-    .home-post-link { display: block; min-height: 0; }
-    .home-post-media { min-height: 148px; }
-    .document-preview { padding: 18px; }
-    .document-sheet { width: min(220px, 86%); min-height: 118px; padding: 18px; }
-    .document-kicker { margin-bottom: 14px; }
-    .document-chip { margin-top: 14px; }
-    .home-post-copy { padding: 24px 20px; }
-    .home-post-copy h3 { font-size: 20px; }
-    .language-grid { grid-template-columns: 1fr; }
-    .language-grid > :global(*) + :global(*) { padding-top: 24px; border-top: 1px solid var(--border); }
-    .info-fold > summary { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 12px; }
-    .info-fold > summary small { display: none; }
-    .maintenance-list, .contribution-content { padding-left: 0; }
-    .maintenance-entry > summary { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; }
-    .maintenance-body, .maintenance-archive-link { margin-left: 0; padding-left: 0; }
+    .maintenance-section { padding-top: 48px; }
+    .maintenance-heading { align-items: flex-start; }
+    .maintenance-heading h2 { font-size: 24px; }
+    .maintenance-heading a { margin-top: 28px; }
+    .maintenance-entry > summary { grid-template-columns: 76px minmax(0, 1fr) 28px; gap: 10px; }
+    .maintenance-body { padding: 0 0 20px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .cover-wave-layer { animation: none; }
-    .cover-expand-toggle, .cover-expand-toggle svg, .home-post-card, .home-post-media :global(img), .info-fold > summary::after { transition-duration: 0ms; }
+    .cover-expand-toggle, .cover-expand-toggle svg, .maintenance-entry > summary > span { transition-duration: 0ms; }
   }
 
   @keyframes cover-wave-drift {

@@ -22,11 +22,15 @@ import { remarkSubSuper } from './src/plugins/remark-sub-super';
 
 const siteUrl = process.env.SITE_URL?.trim() || 'https://ice11123.github.io';
 const basePath = process.env.SITE_BASE?.trim() || '/GUET_428';
+const redirectBasePath = basePath === '/' ? '' : `/${basePath.replace(/^\/+|\/+$/g, '')}`;
 
 export default defineConfig({
   site: siteUrl,
   base: basePath,
   outDir: './dist',
+  redirects: {
+    '/blog/博客功能介绍与演示/欢迎使用': `${redirectBasePath}/blog/其他/欢迎使用/`,
+  },
 
   integrations: [
     expressiveCode(),

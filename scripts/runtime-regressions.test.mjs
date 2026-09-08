@@ -6,6 +6,7 @@ import ts from 'typescript';
 import * as draftModule from '../src/lib/adminDrafts.ts';
 import * as gestureModule from '../src/lib/homeCoverGesture.ts';
 import * as statusModule from '../src/lib/publicStatusRequest.ts';
+import * as labGroupsModule from '../src/config/labGroups.ts';
 import { normalizeDeploymentStatus } from '../src/lib/deploymentStatus.js';
 
 // 执行实际浏览器模块，仅替换 DOM、下载和外部渲染边界，避免测试复制业务逻辑。
@@ -136,6 +137,7 @@ function mountEditor(t, empty = false) {
       },
     },
     '../lib/adminPreview': { renderPreview: () => '', renderPreviewMermaid: async () => {} },
+    '../config/labGroups.ts': labGroupsModule,
   });
   const dispose = runtime.mountAdminDashboard(app);
   t.after(dispose);
@@ -148,6 +150,7 @@ function mountEditor(t, empty = false) {
 
 test('切换文章和新建前保留未保存正文', (t) => {
   const editor = mountEditor(t);
+  assert.equal(editor.fields.dir1.value, '其他');
   editor.fields.body.value = 'edited a';
   editor.form.fire('input');
   editor.select('b');

@@ -187,8 +187,9 @@ test('顶部栏背景全宽且导航内容保持居中约束', () => {
   assert.doesNotMatch(header, /@media\s*\(max-width:\s*999px\)[\s\S]*header\s*\{[\s\S]*backdrop-filter:\s*none/);
 });
 
-test('主页默认隐藏统一侧栏并移除高饱和巨大字占位', () => {
+test('主页默认隐藏统一侧栏并使用实验室分组展示', () => {
   const home = readSource('pages/index.astro');
+  const groups = readSource('components/home/LabGroupShowcase.astro');
   const layout = readSource('layouts/PublicLayout.astro');
   const sidebar = readSource('components/layout/PersistentSidebar.astro');
 
@@ -197,7 +198,9 @@ test('主页默认隐藏统一侧栏并移除高饱和巨大字占位', () => {
   assert.match(layout, /showSidebar\s*&&\s*\([\s\S]*<PersistentSidebar/);
   assert.match(layout, /without-sidebar[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   assert.match(layout, /grid-template-columns:\s*248px minmax\(0,\s*1fr\)/);
-  assert.match(home, /class="document-preview"/);
+  assert.match(home, /<LabGroupShowcase posts=\{allPosts\}/);
+  assert.match(groups, /class="group-showcase"/);
+  assert.doesNotMatch(home, /class="recent-section"|class="document-preview"/);
   assert.doesNotMatch(home, /cover-letter|cover-grid|--cover-hue|home-intro/);
 
   assert.match(sidebar, /aria-current=\{isHome \? 'page'/);
@@ -235,13 +238,13 @@ test('主题按钮直接切换并提供双向可降级圆形过渡', () => {
   assert.match(globalStyles, /clip-path:\s*circle\(0 at var\(--theme-transition-x\) var\(--theme-transition-y\)\)/);
 });
 
-test('主页运行状态提供可见的手动刷新入口', () => {
-  const home = readSource('pages/index.astro');
+test('关于页运行状态提供可见的手动刷新入口', () => {
+  const about = readSource('pages/about.astro');
   const publicStatus = readSource('components/home/PublicStatus.astro');
   const statusScript = readSource('scripts/public-status.ts');
 
-  assert.match(home, /data-public-status-refresh/);
-  assert.doesNotMatch(home, /system-status-heading\)\s*\{\s*display:\s*none/);
+  assert.match(about, /data-public-status-refresh/);
+  assert.doesNotMatch(about, /system-status-heading\)\s*\{\s*display:\s*none/);
   assert.doesNotMatch(publicStatus, /<button[^>]*data-public-status-refresh/);
   assert.match(statusScript, /refreshInFlight/);
 });
@@ -354,9 +357,46 @@ test('首页维护记录有固定上限并提供完整归档页', () => {
   const archive = readSource('pages/maintenance.astro');
   const maintenance = readSource('content/maintenance.md');
 
-  assert.match(home, /maintenanceEntries\.slice\(0, 5\)/);
+  assert.match(home, /maintenanceEntries\.slice\(0, 3\)/);
   assert.match(home, /withBase\('\/maintenance\/'\)/);
+  assert.match(home, /class="maintenance-empty"/);
+  assert.ok(home.indexOf('<LabGroupShowcase') < home.indexOf('class="maintenance-section"'));
   assert.match(archive, /parseMaintenance\(maintenanceSource\)/);
   assert.match(archive, /entries\.map/);
   assert.doesNotMatch(maintenance, /GUET_428 实验室博客建立|从现有博客/);
+});
+
+test('四个实验室分组共享顺序、固定路由和受控管理台输入', () => {
+  const groupConfig = readSource('config/labGroups.ts');
+  const showcase = readSource('components/home/LabGroupShowcase.astro');
+  const categoryRoute = readSource('pages/blog/category/[...slug].astro');
+  const contentConfig = readSource('content.config.ts');
+  const admin = readSource('pages/admin/index.astro');
+
+  assert.match(groupConfig, /\['电源组', '飞控组', '小车组', '其他'\] as const/);
+  assert.match(categoryRoute, /new Set<string>\(LAB_GROUPS\)/);
+  assert.match(contentConfig, /z\.enum\(LAB_GROUPS\)/);
+  assert.match(admin, /<select name="dir1" required>/);
+  assert.match(showcase, /slice\(0, 2\)/);
+  assert.match(showcase, /电源组\.png[\s\S]*飞控组\.png[\s\S]*小车组\.png/);
+  assert.doesNotMatch(showcase, /assets\/groups\/小车\.png/);
+  assert.match(showcase, /format: 'avif'/);
+  assert.match(showcase, /format: 'webp'/);
+  assert.match(showcase, /@media \(hover: hover\) and \(pointer: fine\)/);
+  assert.match(showcase, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test('站点信息迁入关于页，演示文章归入其他并保留旧地址重定向', () => {
+  const home = readSource('pages/index.astro');
+  const about = readSource('pages/about.astro');
+  const demo = readSource('content/blog/其他/欢迎使用.mdx');
+  const astroConfig = readFileSync(join(srcRoot, '..', 'astro.config.mjs'), 'utf8');
+
+  assert.doesNotMatch(home, /id="site-info-title"|<PublicStatus|<GitHubRepoStats/);
+  assert.match(about, /id="about-site-info-title"/);
+  assert.match(about, /<PublicStatus \/>/);
+  assert.match(about, /<GitHubRepoStats/);
+  assert.match(demo, /dir1: "其他"/);
+  assert.match(astroConfig, /redirectBasePath = basePath === '\/'/);
+  assert.match(astroConfig, /'\/blog\/博客功能介绍与演示\/欢迎使用': `\$\{redirectBasePath\}\/blog\/其他\/欢迎使用\/`/);
 });

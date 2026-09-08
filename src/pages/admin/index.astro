@@ -7,6 +7,7 @@ import katexCss from 'katex/dist/katex.min.css?url';
 import { ADMIN_SYNC_API_URL, CLOUD_PUBLISH_ENABLED, SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 import type { AdminPostDraft } from '../../lib/adminDrafts';
 import { resolveDirs } from '../../lib/utils';
+import { LAB_GROUPS } from '../../config/labGroups.ts';
 import '../../styles/system-status.scss';
 
 const posts = await getCollection('blog');
@@ -146,7 +147,7 @@ const systemCards = [
                   <label>标题<input name="title" required /></label>
                   <label>发布日期<input name="pubDate" type="date" required /></label>
                   <label class="wide">描述<textarea name="description" rows="2" required></textarea></label>
-                  <label>一级目录<input name="dir1" placeholder="例如：数学" /></label>
+                  <label>一级目录<select name="dir1" required>{LAB_GROUPS.map((group) => <option value={group}>{group}</option>)}</select></label>
                   <label>二级目录<input name="dir2" placeholder="可选" /></label>
                   <label class="wide">标签<input name="tags" placeholder="使用逗号分隔，例如：Astro, 数学" /></label>
                   <label>文件格式<select name="format"><option value="mdx">MDX</option><option value="md">Markdown</option></select></label>
@@ -236,7 +237,9 @@ const systemCards = [
   .admin-node-count { margin-left: auto; padding: 0 6px; color: var(--foreground-dark); background: rgba(var(--accent-rgb), var(--alpha-bg)); border-radius: var(--radius-full); font-size: .66rem; }
   .admin-node-children { position: relative; padding-left: 1rem !important; }
   .admin-node-children.collapsed { display: none; }
+  .admin-tree-empty { padding: .4rem .38rem; color: var(--foreground-dark); font-size: .76rem; }
   .admin-node-children.active-path::before { content: ''; position: absolute; left: .42rem; top: 0; width: 1px; height: 100%; background: var(--accent); opacity: .85; }
+  .admin-tree-empty { padding: .45rem .38rem; color: var(--foreground-dark); font-size: .76rem; }
   .admin-article-button { padding: .3rem .38rem; color: var(--foreground-dark); gap: .35rem; }
   .admin-article-button:hover { color: var(--foreground); background: rgba(var(--accent-rgb), var(--alpha-hover)); }
   .admin-article-button.current { color: var(--accent-light); background: rgba(var(--accent-rgb), var(--alpha-active)); font-weight: 500; }

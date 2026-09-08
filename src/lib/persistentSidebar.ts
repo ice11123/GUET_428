@@ -1,4 +1,5 @@
 import type { SidebarPost } from './blogData';
+import { DEFAULT_LAB_GROUP, LAB_GROUPS } from '../config/labGroups.ts';
 
 export interface SidebarStats {
   totalArticles: number;
@@ -24,7 +25,7 @@ export interface TagDirectoryEntry {
 export function computeSidebarStats(posts: SidebarPost[]): SidebarStats {
   return {
     totalArticles: posts.length,
-    totalCategories: new Set(posts.map((post) => post.dir1).filter(Boolean)).size,
+    totalCategories: LAB_GROUPS.length,
     totalTags: new Set(posts.flatMap((post) => post.tags).filter(Boolean)).size,
   };
 }
@@ -34,17 +35,24 @@ function byNewest(a: SidebarPost, b: SidebarPost): number {
 }
 
 export function buildArticleDirectory(posts: SidebarPost[]): ArticleDirectorySection[] {
-  const groups = new Map<string, SidebarPost[]>();
+  const groups = new Map<string, SidebarPost[]>(LAB_GROUPS.map((group) => [group, []]));
 
   for (const post of posts) {
-    const name = post.dir1 || '未分类';
+    const name = post.dir1 || DEFAULT_LAB_GROUP;
     const group = groups.get(name) ?? [];
     group.push(post);
     groups.set(name, group);
   }
 
   return [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b, 'zh-CN'))
+    .sort(([a], [b]) => {
+      const aIndex = LAB_GROUPS.indexOf(a as (typeof LAB_GROUPS)[number]);
+      const bIndex = LAB_GROUPS.indexOf(b as (typeof LAB_GROUPS)[number]);
+      if (aIndex >= 0 || bIndex >= 0) {
+        return (aIndex < 0 ? Number.MAX_SAFE_INTEGER : aIndex) - (bIndex < 0 ? Number.MAX_SAFE_INTEGER : bIndex);
+      }
+      return a.localeCompare(b, 'zh-CN');
+    })
     .map(([name, groupPosts]) => {
       const directPosts = groupPosts.filter((post) => !post.dir2).sort(byNewest);
       const nested = new Map<string, SidebarPost[]>();

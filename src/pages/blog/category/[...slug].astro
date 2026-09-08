@@ -4,10 +4,11 @@ import Layout from '../../../layouts/PublicContentLayout.astro';
 import BlogList from '../../../components/blog/BlogList.astro';
 import JsonLd from '../../../components/blog/JsonLd.astro';
 import { resolveDirs } from '../../../lib/utils';
+import { LAB_GROUPS } from '../../../config/labGroups.ts';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  const pathSet = new Set<string>();
+  const pathSet = new Set<string>(LAB_GROUPS);
   for (const post of posts) {
     const { dir1, dir2 } = resolveDirs(post);
     if (dir1) {

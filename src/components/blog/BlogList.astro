@@ -2,6 +2,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import BlogCard from './BlogCard.astro';
 import { resolveDirs } from '../../lib/utils';
+import { DEFAULT_LAB_GROUP } from '../../config/labGroups.ts';
 
 interface Props {
   sort?: 'time' | 'dir';
@@ -26,7 +27,7 @@ let orderedData: Array<[string, Array<[string, CollectionEntry<'blog'>[]]>]> = [
 if (sort === 'dir') {
   const grouped: Record<string, Record<string, CollectionEntry<'blog'>[]>> = {};
   for (const post of posts) {
-    const d1 = post.data.dir1 || '未分类';
+    const d1 = post.data.dir1 || DEFAULT_LAB_GROUP;
     const d2 = post.data.dir2 || '';
     grouped[d1] ??= {};
     grouped[d1][d2] ??= [];
@@ -36,13 +37,12 @@ if (sort === 'dir') {
   const finalOrder: typeof orderedData = [];
 
   const orderedDir1 = [
-    ...dirOrder.dir1.filter(d1 => grouped[d1]),
+    ...dirOrder.dir1,
     ...Object.keys(grouped).filter(d1 => !dirOrder.dir1.includes(d1)).sort((a, b) => a.localeCompare(b)),
   ];
 
   for (const d1 of orderedDir1) {
-    if (!grouped[d1]) continue;
-    const dir2Map = grouped[d1];
+    const dir2Map = grouped[d1] ?? {};
     const dir2List: Array<[string, CollectionEntry<'blog'>[]]> = [];
 
     // 1. 先渲染你配置的 dir2
@@ -84,6 +84,7 @@ if (sort === 'dir') {
     list-style: none;
     padding: 0;
   }
+  .directory-empty { margin: 0 8px 28px; color: var(--text-secondary); font-size: 14px; }
 </style>
 
 <main>
@@ -96,6 +97,7 @@ if (sort === 'dir') {
       {(orderedData || []).map(([dir1, dir2List]) => (
         <div>
           <h2 class="mk-title">{dir1}</h2>
+          {dir2List.length === 0 && <p class="directory-empty">该分组暂无文章。</p>}
           {dir2List.map(([dir2, list]) => (
             <div>
               <!-- 空 dir2 不显示标题，但会显示文章 -->

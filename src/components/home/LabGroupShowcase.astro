@@ -1,0 +1,443 @@
+---
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import type { CollectionEntry } from 'astro:content';
+import { LAB_GROUPS, type LabGroup } from '../../config/labGroups.ts';
+import { resolveDirs } from '../../lib/utils';
+import { withBase } from '../../lib/urls';
+import FormattedDate from '../blog/FormattedDate.astro';
+import powerImage from '../../assets/groups/电源组.png';
+import flightImage from '../../assets/groups/飞控组.png';
+import carImage from '../../assets/groups/小车组.png';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+}
+
+interface GroupPresentation {
+  name: LabGroup;
+  index: string;
+  english: string;
+  side: 'left' | 'right' | 'none';
+  image?: ImageMetadata;
+  artClass?: string;
+}
+
+const { posts } = Astro.props;
+const imageWidths = [360, 560, 760];
+const presentations: GroupPresentation[] = [
+  { name: '电源组', index: '01', english: 'POWER ELECTRONICS', side: 'right', image: powerImage, artClass: 'power-art' },
+  { name: '飞控组', index: '02', english: 'FLIGHT CONTROL', side: 'left', image: flightImage, artClass: 'flight-art' },
+  { name: '小车组', index: '03', english: 'MOBILE ROBOTICS', side: 'right', image: carImage, artClass: 'car-art' },
+  { name: '其他', index: '04', english: 'OTHER WORK', side: 'none' },
+];
+
+const cards = await Promise.all(presentations.map(async (group) => {
+  const recentPosts = posts
+    .filter((post) => resolveDirs(post).dir1 === group.name)
+    .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+    .slice(0, 2);
+
+  if (!group.image) return { ...group, recentPosts, sources: null };
+
+  const [avif, webp] = await Promise.all([
+    Promise.all(imageWidths.map((width) => getImage({ src: group.image!, width, format: 'avif', quality: 66 }))),
+    Promise.all(imageWidths.map((width) => getImage({ src: group.image!, width, format: 'webp', quality: 78 }))),
+  ]);
+  const toSrcset = (sources: typeof avif) => sources.map((source, index) => `${source.src} ${imageWidths[index]}w`).join(', ');
+
+  return {
+    ...group,
+    recentPosts,
+    sources: {
+      avif: toSrcset(avif),
+      webp: toSrcset(webp),
+      fallback: webp.at(-1)?.src ?? group.image.src,
+    },
+  };
+}));
+
+if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
+  throw new Error('实验室分组展示顺序与统一目录配置不一致');
+}
+---
+
+<section class="group-showcase" aria-labelledby="group-showcase-title">
+  <header class="group-showcase-heading">
+    <div>
+      <p>LAB GROUPS</p>
+      <h2 id="group-showcase-title">实验室分组</h2>
+    </div>
+    <a href={withBase('/blog/')}>浏览全部文章 <span aria-hidden="true">→</span></a>
+  </header>
+
+  <div class="group-stack">
+    {cards.map((group) => (
+      <a
+        class:list={['group-entry', `art-${group.side}`, group.artClass]}
+        href={withBase(`/blog/category/${encodeURIComponent(group.name)}/`)}
+        aria-label={`进入${group.name}文章页`}
+      >
+        <div class="group-copy">
+          <div class="group-title-line">
+            <span>{group.index}</span>
+            <p>{group.english}</p>
+          </div>
+          <h3>{group.name}</h3>
+          <div class="group-recent">
+            <span class="group-recent-label">近期文章</span>
+            {group.recentPosts.length > 0 ? (
+              <ol>
+                {group.recentPosts.map((post) => (
+                  <li>
+                    <span>{post.data.title}</span>
+                    <time datetime={post.data.pubDate.toISOString()}><FormattedDate date={post.data.pubDate} /></time>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p class="group-empty">暂无文章，内容正在整理。</p>
+            )}
+          </div>
+          <span class="group-enter">进入分组 <span aria-hidden="true">↗</span></span>
+        </div>
+
+        {group.image && group.sources && (
+          <div class="group-art" aria-hidden="true">
+            <picture>
+              <source type="image/avif" srcset={group.sources.avif} sizes="(max-width: 680px) 78vw, (max-width: 1100px) 46vw, 520px" />
+              <source type="image/webp" srcset={group.sources.webp} sizes="(max-width: 680px) 78vw, (max-width: 1100px) 46vw, 520px" />
+              <img
+                src={group.sources.fallback}
+                width={group.image.width}
+                height={group.image.height}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+          </div>
+        )}
+
+        {group.side === 'none' && <span class="other-mark" aria-hidden="true">04</span>}
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .group-showcase {
+    padding: 8px 0 72px;
+  }
+
+  .group-showcase-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 42px;
+  }
+
+  .group-showcase-heading p {
+    margin: 0 0 10px;
+    color: var(--accent-tertiary);
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: .14em;
+  }
+
+  .group-showcase-heading h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 30px;
+    line-height: 1.2;
+  }
+
+  .group-showcase-heading a {
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .group-stack {
+    display: grid;
+    gap: 46px;
+  }
+
+  .group-entry {
+    position: relative;
+    display: grid;
+    min-height: 276px;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, .92fr);
+    color: inherit;
+    text-decoration: none;
+    isolation: isolate;
+    perspective: 1100px;
+    transition: transform 180ms cubic-bezier(.23, 1, .32, 1);
+  }
+
+  .group-entry::before {
+    content: '';
+    position: absolute;
+    z-index: -2;
+    inset: 20px 0;
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent) 18%);
+    border-radius: 18px;
+    box-shadow: 0 20px 48px color-mix(in srgb, var(--text-primary) 8%, transparent);
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .group-entry::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 44px;
+    bottom: 44px;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 999px;
+    opacity: .72;
+  }
+
+  .art-right::after { left: 0; }
+  .art-left::after { right: 0; }
+
+  .group-copy {
+    position: relative;
+    z-index: 2;
+    align-self: center;
+    min-width: 0;
+    padding: 48px 42px;
+  }
+
+  .art-right .group-copy { grid-column: 1; }
+  .art-left .group-copy { grid-column: 2; }
+
+  .group-title-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .group-title-line > span {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .group-title-line p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .12em;
+  }
+
+  .group-copy h3 {
+    margin: 10px 0 22px;
+    color: var(--text-primary);
+    font-size: clamp(30px, 4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: .03em;
+  }
+
+  .group-recent {
+    max-width: 440px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .group-recent-label {
+    display: block;
+    margin-bottom: 9px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .group-recent ol {
+    display: grid;
+    gap: 7px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .group-recent li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 18px;
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  .group-recent li > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .group-recent time {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  .group-empty {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  .group-enter {
+    display: inline-flex;
+    gap: 6px;
+    margin-top: 22px;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 750;
+  }
+
+  .group-art {
+    position: relative;
+    z-index: 1;
+    min-height: 276px;
+    pointer-events: none;
+    transform-style: preserve-3d;
+  }
+
+  .group-art picture {
+    position: absolute;
+    inset: 0;
+  }
+
+  .group-art img {
+    position: absolute;
+    top: 50%;
+    display: block;
+    width: var(--art-width, min(50vw, 560px));
+    max-width: none;
+    height: auto;
+    filter: drop-shadow(0 28px 24px color-mix(in srgb, #031b35 25%, transparent));
+    transition: transform 180ms cubic-bezier(.23, 1, .32, 1), filter 180ms ease;
+  }
+
+  .art-right .group-art { grid-column: 2; }
+  .art-right .group-art img {
+    right: -48px;
+    transform: translateY(-50%) rotateY(-7deg) rotateX(2deg) translateZ(22px);
+    transform-origin: 64% 64%;
+  }
+
+  .art-left .group-art { grid-column: 1; grid-row: 1; }
+  .art-left .group-art img {
+    left: -52px;
+    transform: translateY(-50%) rotateY(7deg) rotateX(2deg) translateZ(22px);
+    transform-origin: 36% 64%;
+  }
+
+  .power-art { --art-width: min(51vw, 570px); }
+  .flight-art { --art-width: min(49vw, 548px); }
+  .car-art { --art-width: min(43vw, 470px); }
+
+  .art-none {
+    min-height: 232px;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .art-none::after { left: 0; }
+  .art-none .group-copy { max-width: 690px; }
+
+  .other-mark {
+    position: absolute;
+    z-index: -1;
+    right: 36px;
+    top: 50%;
+    color: color-mix(in srgb, var(--accent) 9%, transparent);
+    font-size: clamp(120px, 20vw, 230px);
+    font-weight: 900;
+    line-height: .8;
+    letter-spacing: -.08em;
+    transform: translateY(-50%);
+  }
+
+  .group-entry:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 5px;
+    border-radius: 20px;
+  }
+
+  .group-entry:active { transform: scale(.985); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .group-entry:hover { transform: translateY(-3px); }
+    .group-entry:hover::before {
+      border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+      box-shadow: 0 26px 56px color-mix(in srgb, var(--text-primary) 12%, transparent);
+    }
+    .art-right:hover .group-art img { transform: translateY(-52%) rotateY(-4deg) rotateX(1deg) translateZ(32px) scale(1.018); }
+    .art-left:hover .group-art img { transform: translateY(-52%) rotateY(4deg) rotateX(1deg) translateZ(32px) scale(1.018); }
+  }
+
+  @media (max-width: 820px) {
+    .group-stack { gap: 34px; }
+    .group-entry { grid-template-columns: minmax(0, 1fr) minmax(240px, .78fr); }
+    .group-copy { padding-inline: 30px; }
+    .group-art img { width: var(--art-width-tablet, min(55vw, 460px)); }
+    .car-art { --art-width-tablet: min(48vw, 400px); }
+  }
+
+  @media (max-width: 640px) {
+    .group-showcase { padding-bottom: 52px; }
+    .group-showcase-heading { align-items: flex-start; margin-bottom: 28px; }
+    .group-showcase-heading h2 { font-size: 25px; }
+    .group-showcase-heading a { margin-top: 28px; }
+    .group-stack { gap: 28px; }
+    .group-entry,
+    .art-none {
+      display: flex;
+      min-height: 0;
+      flex-direction: column;
+    }
+    .group-entry::before { inset: 12px 0; border-radius: 15px; }
+    .group-entry::after { top: 34px; bottom: auto; height: 54px; }
+    .group-copy,
+    .art-left .group-copy,
+    .art-right .group-copy {
+      order: 1;
+      width: auto;
+      padding: 34px 24px 18px;
+    }
+    .group-copy h3 { margin-bottom: 18px; font-size: 30px; }
+    .group-art,
+    .art-left .group-art,
+    .art-right .group-art {
+      order: 2;
+      width: 100%;
+      min-height: 240px;
+    }
+    .group-art img {
+      top: 43%;
+      width: var(--art-width-mobile, min(85vw, 460px));
+    }
+    .art-right .group-art img { right: -28px; }
+    .art-left .group-art img { left: -32px; }
+    .power-art { --art-width-mobile: min(86vw, 460px); }
+    .flight-art { --art-width-mobile: min(82vw, 430px); }
+    .car-art { --art-width-mobile: min(72vw, 370px); }
+    .art-none .group-copy { padding-bottom: 40px; }
+    .other-mark { right: 18px; font-size: 132px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .group-entry,
+    .group-art img,
+    .group-entry::before { transition-duration: 0ms; }
+    .group-entry:active,
+    .group-entry:hover { transform: none; }
+    .art-right:hover .group-art img { transform: translateY(-50%) rotateY(-7deg) rotateX(2deg) translateZ(22px); }
+    .art-left:hover .group-art img { transform: translateY(-50%) rotateY(7deg) rotateX(2deg) translateZ(22px); }
+  }
+</style>

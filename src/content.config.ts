@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { LAB_GROUPS } from './config/labGroups.ts';
 
 const blog = defineCollection({
 	// Load Markdown and MDX files in the `src/content/blog/` directory.
@@ -18,7 +19,7 @@ const blog = defineCollection({
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
 
-			dir1: z.string().optional(), // 一级目录
+			dir1: z.enum(LAB_GROUPS), // 一级目录
 			dir2: z.string().optional(), // 二级目录
 			tags: z.array(z.string()).default([]), // 标签
 		}),

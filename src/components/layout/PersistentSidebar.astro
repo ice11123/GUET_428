@@ -96,6 +96,7 @@ const activeTag = decodePathPart(tagMatch?.[1]);
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4" /></svg>
             </summary>
             <div class="directory-group-body">
+              {section.total === 0 && <p class="directory-empty">暂无文章</p>}
               {section.directPosts.map((post) => (
                 <a class:list={{ current: post.slug === currentSlug }} href={blogPostPath(post.slug)} aria-current={post.slug === currentSlug ? 'page' : undefined}>{post.title}</a>
               ))}

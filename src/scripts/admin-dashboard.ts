@@ -1,6 +1,7 @@
 // @ts-nocheck -- 管理台依赖构建时注入的数据和浏览器 DOM，所有入口均做运行时保护。
 import { DraftStorageError, LocalStorageDraftStore, draftToMarkdown, slugifyAdminId } from '../lib/adminDrafts';
 import { renderPreview, renderPreviewMermaid } from '../lib/adminPreview';
+import { DEFAULT_LAB_GROUP, LAB_GROUPS, isLabGroup } from '../config/labGroups.ts';
 
 const ADMIN_UNLOCK_STORAGE_KEY = 'guet-428-admin-unlocked';
 const TREE_STORAGE_KEY = 'guet-428-admin-tree-v1';
@@ -277,7 +278,12 @@ function loadForm() {
   hasUnsavedChanges = false;
   ['id', 'title', 'description', 'pubDate', 'dir1', 'dir2', 'body', 'format'].forEach((name) => {
     const input = field(name);
-    if (input) input.value = post?.[name] || '';
+    if (!input) return;
+    if (name === 'dir1') {
+      input.value = isLabGroup(post?.dir1) ? post.dir1 : DEFAULT_LAB_GROUP;
+      return;
+    }
+    input.value = post?.[name] || '';
   });
   const tags = field('tags');
   if (tags) tags.value = post?.tags.join(', ') || '';
@@ -325,7 +331,7 @@ function collect() {
     title: field('title')?.value || '',
     description: field('description')?.value || '',
     pubDate: field('pubDate')?.value || '',
-    dir1: field('dir1')?.value || '',
+    dir1: isLabGroup(field('dir1')?.value) ? field('dir1').value : DEFAULT_LAB_GROUP,
     dir2: field('dir2')?.value || '',
     tags: (field('tags')?.value || '').split(',').map((tag) => tag.trim()).filter(Boolean),
     body: field('body')?.value || '',
@@ -351,8 +357,8 @@ function articleButton(post) {
   return `<li class="admin-article-item"><button type="button" class="admin-article-button ${post.id === selectedId ? 'current' : ''}" data-post-id="${escapeHtml(post.id)}"><span class="admin-article-title">${escapeHtml(post.title || '未命名文章')}</span><span class="admin-article-badges">${badges.join('')}</span></button></li>`;
 }
 
-function node(key, label, posts, children = null) {
-  const matches = posts.some((post) => articleMatches(post, treeState.query));
+function node(key, label, posts, children = null, showWhenEmpty = false) {
+  const matches = posts.some((post) => articleMatches(post, treeState.query)) || (showWhenEmpty && !treeState.query);
   if (!matches) return '';
   const forced = Boolean(treeState.query) || posts.some((post) => post.id === selectedId);
   const expanded = forced || treeState.expanded.includes(key);
@@ -365,24 +371,23 @@ function node(key, label, posts, children = null) {
 function renderDirectoryTree(posts) {
   const orphaned = posts.filter((post) => post.orphaned);
   const regular = posts.filter((post) => !post.orphaned);
-  const groups = new Map();
+  const groups = new Map(LAB_GROUPS.map((group) => [group, new Map()]));
   for (const post of regular) {
-    const dir1 = post.dir1 || '未分类';
+    const dir1 = isLabGroup(post.dir1) ? post.dir1 : DEFAULT_LAB_GROUP;
     const dir2 = post.dir2 || '';
-    if (!groups.has(dir1)) groups.set(dir1, new Map());
     if (!groups.get(dir1).has(dir2)) groups.get(dir1).set(dir2, []);
     groups.get(dir1).get(dir2).push(post);
   }
   const output = [];
   if (orphaned.length) output.push(node('dir:orphaned', '待重新绑定', orphaned));
-  for (const dir1 of [...groups.keys()].sort((a, b) => a.localeCompare(b, 'zh-CN'))) {
+  for (const dir1 of LAB_GROUPS) {
     const dir2Map = groups.get(dir1);
     const all = [...dir2Map.values()].flat();
     const children = [...dir2Map.keys()].sort((a, b) => a.localeCompare(b, 'zh-CN')).map((dir2) => {
       const articles = dir2Map.get(dir2);
       return dir2 ? node(`dir:${dir1}/${dir2}`, dir2, articles) : sortedPosts(articles).filter((post) => articleMatches(post, treeState.query)).map(articleButton).join('');
-    }).join('');
-    output.push(node(`dir:${dir1}`, dir1, all, children));
+    }).join('') || '<li class="admin-tree-empty">暂无文章</li>';
+    output.push(node(`dir:${dir1}`, dir1, all, children, LAB_GROUPS.includes(dir1)));
   }
   return output.join('');
 }
@@ -597,7 +602,7 @@ function bindEvents() {
   listen(app.querySelector('[data-status-refresh]'), 'click', () => { void refreshSystemStatus(); });
   listen(app.querySelector('[data-new]'), 'click', () => {
     if (!preserveUnsavedChanges()) return;
-    const post = { id: slugifyAdminId('未命名文章'), title: '未命名文章', description: '', pubDate: new Date().toISOString().slice(0, 10), dir1: '', dir2: '', tags: [], body: '# 新文章\n\n在这里开始写作。', format: 'mdx' };
+    const post = { id: slugifyAdminId('未命名文章'), title: '未命名文章', description: '', pubDate: new Date().toISOString().slice(0, 10), dir1: DEFAULT_LAB_GROUP, dir2: '', tags: [], body: '# 新文章\n\n在这里开始写作。', format: 'mdx' };
     try {
       saveDraft(post);
       drafts = readDrafts();

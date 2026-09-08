@@ -1,3 +1,7 @@
+import { LAB_GROUPS } from './config/labGroups.ts';
+
+export { LAB_GROUPS } from './config/labGroups.ts';
+
 export const LAB_NAME = '428强弱电综合实验室';
 export const INSTITUTION_NAME = '桂林电子科技大学';
 export const PROGRAM_NAME = '电气工程及其自动化';
@@ -16,8 +20,7 @@ export const ADMIN_SYNC_API_URL = import.meta.env.PUBLIC_ADMIN_SYNC_API_URL?.tri
 export const CLOUD_PUBLISH_ENABLED = import.meta.env.PUBLIC_CLOUD_PUBLISH_ENABLED === 'true';
 export const TARGET_REPOSITORY = 'ice11123/GUET_428';
 
-// 留空时按文章目录名称自动排序；需要固定顺序时可在这里追加名称。
-export const DIR1_ORDER: string[] = [];
+export const DIR1_ORDER: string[] = [...LAB_GROUPS];
 export const DIR2_ORDER: Record<string, string[]> = {};
 
 export const VALID_THEMES = ['light', 'dark'] as const;
