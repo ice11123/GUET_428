@@ -6,7 +6,7 @@ export interface MaintenanceEntry {
   html: string;
 }
 
-const ENTRY_HEADING = /^##\s+(\d{4}-\d{2}-\d{2})｜(.+)$/gm;
+const ENTRY_HEADING = /^##[ \t]+(\d{4}-\d{2}-\d{2})[ \t]*[|｜][ \t]*([^\r\n]+?)[ \t]*$/gm;
 
 export async function parseMaintenance(source: string): Promise<MaintenanceEntry[]> {
   const matches = [...source.matchAll(ENTRY_HEADING)];
@@ -16,7 +16,7 @@ export async function parseMaintenance(source: string): Promise<MaintenanceEntry
     rehypePlugins: [stripRawHtml],
   });
 
-  return Promise.all(matches.map(async (match, index) => {
+  const entries = await Promise.all(matches.map(async (match, index) => {
     const start = (match.index ?? 0) + match[0].length;
     const end = matches[index + 1]?.index ?? source.length;
     const body = source.slice(start, end).trim();
@@ -27,6 +27,8 @@ export async function parseMaintenance(source: string): Promise<MaintenanceEntry
       html: rendered.code,
     };
   }));
+
+  return entries.sort((left, right) => right.date.localeCompare(left.date));
 }
 
 function stripRawHtml() {
