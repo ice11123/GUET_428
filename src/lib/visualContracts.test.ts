@@ -367,9 +367,15 @@ test('首页维护记录有固定上限并提供完整归档页', () => {
   const archive = readSource('pages/maintenance.astro');
   const maintenance = readSource('content/maintenance.md');
 
-  assert.match(home, /maintenanceEntries\.slice\(0, 3\)/);
+  assert.match(home, /maintenanceEntries\.slice\(0, 5\)/);
   assert.match(home, /withBase\('\/maintenance\/'\)/);
   assert.match(home, /class="maintenance-empty"/);
+  assert.match(home, /class="maintenance-title-block"/);
+  assert.match(home, /class="maintenance-entry-hint"/);
+  assert.match(home, /class="maintenance-badge">最近更新/);
+  assert.match(home, /class="maintenance-chevron"/);
+  assert.match(home, /\.maintenance-entry::before/);
+  assert.match(home, /\.maintenance-entry\[open\] \.maintenance-chevron/);
   assert.ok(home.indexOf('<LabGroupShowcase') < home.indexOf('class="maintenance-section"'));
   assert.match(archive, /parseMaintenance\(maintenanceSource\)/);
   assert.match(archive, /entries\.map/);

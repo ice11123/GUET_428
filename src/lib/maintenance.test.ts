@@ -23,11 +23,16 @@ test('维护公告兼容常用分隔符并按日期倒序返回', async () => {
   assert.match(entries[0].html, /最新内容/);
 });
 
-test('仓库维护记录包含至少一条可显示公告', async () => {
+test('仓库维护记录包含已核实的近期公告', async () => {
   const maintenancePath = fileURLToPath(new URL('../content/maintenance.md', import.meta.url));
   const entries = await parseMaintenance(readFileSync(maintenancePath, 'utf8'));
 
-  assert.ok(entries.length > 0);
-  assert.match(entries[0].title, /\S/);
-  assert.match(entries[0].html, /<li>/);
+  assert.deepEqual(entries.slice(0, 5).map((entry) => entry.title), [
+    '维护公告与目录导航修复',
+    '实验室分组首页重构',
+    '发布服务接入与管理台显示修复',
+    '代码审查与可靠性修复',
+    '浅蓝主题与首页布局修正',
+  ]);
+  assert.ok(entries.every((entry) => entry.html.includes('<li>')));
 });

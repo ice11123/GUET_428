@@ -58,7 +58,7 @@ const websiteLd = {
 
 const allPosts = await getCollection('blog');
 const maintenanceEntries = await parseMaintenance(maintenanceSource);
-const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
+const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
 ---
 
 <PublicLayout title={SITE_TITLE} description={SITE_DESCRIPTION} image={homeHeroImage} sidebarMode="hidden">
@@ -186,21 +186,30 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
 
           <section class="maintenance-section" aria-labelledby="maintenance-home-title">
             <header class="maintenance-heading">
-              <div>
-                <p class="section-kicker">SITE CHANGELOG</p>
-                <h2 id="maintenance-home-title">维护公告</h2>
+              <div class="maintenance-title-block">
+                <span>03</span>
+                <div>
+                  <h2 id="maintenance-home-title">近期维护公告</h2>
+                  <p>记录每一次小小的进步</p>
+                </div>
               </div>
-              <a href={withBase('/maintenance/')}>查看完整记录 <span aria-hidden="true">→</span></a>
+              <a class="maintenance-archive-link" href={withBase('/maintenance/')}>全部记录 <span aria-hidden="true">↗</span></a>
             </header>
 
             {recentMaintenanceEntries.length > 0 ? (
               <div class="maintenance-list">
-                {recentMaintenanceEntries.map((entry) => (
+                {recentMaintenanceEntries.map((entry, index) => (
                   <details class="maintenance-entry">
                     <summary>
                       <time datetime={entry.date}>{entry.date}</time>
-                      <strong>{entry.title}</strong>
-                      <span aria-hidden="true"></span>
+                      <span class="maintenance-entry-copy">
+                        <span class="maintenance-entry-title">
+                          {entry.title}
+                          {index === 0 && <span class="maintenance-badge">最近更新</span>}
+                        </span>
+                        <span class="maintenance-entry-hint" set:html={entry.html.match(/<li>([\s\S]*?)<\/li>/)?.[1] || '点击查看调整与修复详情'}></span>
+                      </span>
+                      <svg class="maintenance-chevron" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </summary>
                     <div class="maintenance-body" set:html={entry.html}></div>
                   </details>
@@ -434,66 +443,70 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
   .home-content-layout { position: relative; z-index: 4; width: min(1080px, calc(100% - 48px)); margin: 40px auto 0; }
   .home-main-column { min-width: 0; }
   .home-drawer { position: relative; z-index: 4; display: flow-root; min-width: 0; background: var(--canvas); }
-  .maintenance-heading a:focus-visible,
+  .maintenance-archive-link:focus-visible,
   .maintenance-entry > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 
   .maintenance-section {
-    padding: 64px 0 24px;
-    border-top: 1px solid var(--border);
+    margin-top: 32px;
+    padding: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
     content-visibility: auto;
     contain-intrinsic-block-size: auto 380px;
   }
-  .maintenance-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
-  .maintenance-heading h2 { margin: 0; color: var(--text-primary); font-size: 28px; line-height: 1.25; }
-  .maintenance-heading a { color: var(--accent); font-size: 14px; font-weight: 700; }
-  .maintenance-list { border-top: 1px solid var(--border); }
+  .maintenance-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 22px; }
+  .maintenance-title-block { display: flex; align-items: flex-start; gap: 16px; }
+  .maintenance-title-block > span { display: grid; flex: 0 0 28px; width: 28px; height: 28px; place-items: center; color: var(--accent); background: var(--surface-subtle); border-radius: 8px; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .maintenance-title-block h2 { margin: 0; color: var(--text-primary); font-size: 20px; line-height: 1.4; }
+  .maintenance-title-block p { margin: 4px 0 0; color: var(--text-secondary); font-size: 14px; }
+  .maintenance-archive-link { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; color: var(--accent); font-size: 12px; font-weight: 650; text-decoration: none; }
+  .maintenance-list { padding-left: 14px; }
   .maintenance-entry {
-    border-bottom: 1px solid var(--border);
-    content-visibility: auto;
-    contain-intrinsic-block-size: auto 64px;
+    position: relative;
+    margin: 0;
+    padding: 0 0 0 24px;
+    background: transparent;
+    border: 0;
+    border-left: 1px solid var(--border);
+    border-radius: 0;
   }
+  .maintenance-entry::before { content: ''; position: absolute; left: -4px; top: 30px; width: 7px; height: 7px; border-radius: 50%; background: var(--border); box-shadow: 0 0 0 5px var(--surface); }
+  .maintenance-entry:first-child::before { background: var(--accent); }
   .maintenance-entry > summary {
     display: grid;
-    grid-template-columns: 104px minmax(0, 1fr) 28px;
-    align-items: center;
+    grid-template-columns: 88px minmax(0, 1fr) 20px;
+    align-items: start;
     gap: 18px;
-    min-height: 64px;
+    margin: 0;
+    padding: 20px 0;
     cursor: pointer;
     list-style: none;
   }
   .maintenance-entry > summary::-webkit-details-marker { display: none; }
-  .maintenance-entry time { color: var(--accent); font-size: 12px; font-weight: 700; }
-  .maintenance-entry > summary strong { color: var(--text-primary); font-size: 15px; }
-  .maintenance-entry > summary > span {
-    position: relative;
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    transition: transform 180ms cubic-bezier(.23, 1, .32, 1), border-color 180ms ease;
-  }
-  .maintenance-entry > summary > span::before,
-  .maintenance-entry > summary > span::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 10px;
-    height: 1.5px;
-    background: var(--accent);
-    transform: translate(-50%, -50%);
-  }
-  .maintenance-entry > summary > span::after { transform: translate(-50%, -50%) rotate(90deg); }
-  .maintenance-entry[open] > summary > span { transform: rotate(45deg); border-color: color-mix(in srgb, var(--accent) 62%, var(--border)); }
-  .maintenance-body { padding: 0 46px 22px 122px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
-  .maintenance-body :global(p), .maintenance-body :global(ul) { margin: 8px 0 0; }
+  .maintenance-entry + .maintenance-entry > summary { border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+  .maintenance-entry time { padding-top: 3px; color: var(--text-secondary); font-size: 11px; font-weight: 650; line-height: 1.8; font-variant-numeric: tabular-nums; }
+  .maintenance-entry-copy { min-width: 0; }
+  .maintenance-entry-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--text-primary); font-size: 14px; font-weight: 650; line-height: 1.6; overflow-wrap: anywhere; }
+  .maintenance-badge { padding: 1px 6px; color: var(--accent); background: var(--surface-subtle); border-radius: 4px; font-size: 10px; white-space: nowrap; }
+  .maintenance-entry-hint { display: block; margin-top: 5px; overflow: hidden; color: var(--text-secondary); font-size: 12px; font-weight: 400; line-height: 1.7; text-overflow: ellipsis; white-space: nowrap; }
+  .maintenance-entry-hint :global(*) { display: inline; margin: 0; padding: 0; color: inherit; background: transparent; font: inherit; }
+  .maintenance-chevron { margin-top: 3px; color: var(--text-secondary); transition: transform 160ms var(--ease-out); }
+  .maintenance-entry[open] .maintenance-chevron { transform: rotate(90deg); }
+  .maintenance-entry[open] .maintenance-entry-hint { display: none; }
+  .maintenance-entry:has(> summary:focus-visible) .maintenance-chevron { transition: none; }
+  .maintenance-body { margin: 0 0 16px 106px; padding: 16px 20px; background: var(--surface-subtle); border-radius: 10px; color: var(--text-secondary); font-size: 13px; line-height: 1.85; overflow-wrap: anywhere; }
+  .maintenance-body :global(p), .maintenance-body :global(ul) { margin: 0; }
+  .maintenance-body :global(ul) { padding-left: 18px; }
+  .maintenance-body :global(li + li) { margin-top: 8px; }
+  .maintenance-body :global(code) { white-space: normal; }
   .maintenance-empty { padding: 28px 0; color: var(--text-secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .maintenance-empty strong { color: var(--text-primary); font-size: 16px; }
   .maintenance-empty p { margin: 6px 0 0; font-size: 14px; }
 
   @media (hover: hover) and (pointer: fine) {
     .cover-expand-toggle:hover { background: rgba(8, 12, 14, .48); border-color: #fff; }
-    .maintenance-entry > summary:hover > span { border-color: color-mix(in srgb, var(--accent) 62%, var(--border)); }
+    .maintenance-entry > summary:hover .maintenance-entry-title { color: var(--accent); }
   }
 
   @media (max-width: 900px) {
@@ -519,17 +532,24 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
     .cover-waves { height: clamp(56px, 12dvh, 96px); }
     .cover-expand-toggle { background: rgba(8, 12, 14, .58); }
     .home-content-layout { width: calc(100% - 32px); margin-top: 28px; }
-    .maintenance-section { padding-top: 48px; }
-    .maintenance-heading { align-items: flex-start; }
-    .maintenance-heading h2 { font-size: 24px; }
-    .maintenance-heading a { margin-top: 28px; }
-    .maintenance-entry > summary { grid-template-columns: 76px minmax(0, 1fr) 28px; gap: 10px; }
-    .maintenance-body { padding: 0 0 20px; }
+    .maintenance-section { margin-top: 20px; padding: 20px 16px; }
+    .maintenance-heading { flex-wrap: wrap; gap: 12px; padding-bottom: 12px; }
+    .maintenance-title-block { gap: 10px; }
+    .maintenance-title-block h2 { font-size: 18px; }
+    .maintenance-title-block p { font-size: 12px; }
+    .maintenance-list { padding-left: 4px; }
+    .maintenance-entry { padding-left: 16px; }
+    .maintenance-entry::before { top: 26px; }
+    .maintenance-entry > summary { grid-template-columns: minmax(0, 1fr) 18px; gap: 5px 10px; padding: 16px 0; }
+    .maintenance-entry time { grid-column: 1; padding: 0; }
+    .maintenance-entry-copy { grid-column: 1; }
+    .maintenance-chevron { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+    .maintenance-body { margin-left: 0; padding: 14px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .cover-wave-layer { animation: none; }
-    .cover-expand-toggle, .cover-expand-toggle svg, .maintenance-entry > summary > span { transition-duration: 0ms; }
+    .cover-expand-toggle, .cover-expand-toggle svg, .maintenance-chevron { transition-duration: 0ms; }
   }
 
   @keyframes cover-wave-drift {
