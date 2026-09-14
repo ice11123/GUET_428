@@ -91,6 +91,7 @@ test('TOC、搜索与 Spoiler 使用新的交互契约', () => {
 
 test('左侧栏移除个人资料并保留目录、标签目录，文章 TOC 独立位于右栏', () => {
   const sidebar = readSource('components/layout/PersistentSidebar.astro');
+  const sidebarStyles = readSource('styles/persistent-sidebar.scss');
   const articleToc = readSource('components/layout/ArticleTocSidebar.astro');
   const layout = readSource('layouts/PublicLayout.astro');
   const interaction = readSource('scripts/persistent-sidebar.ts');
@@ -103,6 +104,13 @@ test('左侧栏移除个人资料并保留目录、标签目录，文章 TOC 独
   assert.match(sidebar, /aria-label="标签目录"/);
   assert.doesNotMatch(sidebar, /id="toc-list"|data-sidebar-tab="toc"|data-sidebar-tab="series"/);
   assert.match(sidebar, /aria-current=\{post\.slug === currentSlug/);
+  assert.match(sidebar, /class="directory-folder"/);
+  assert.match(sidebar, /class="directory-article"/);
+  assert.match(sidebar, /class="directory-article-title"/);
+  assert.match(sidebar, /'contains-current'/);
+  assert.match(sidebarStyles, /\.directory-group-body\s*\{[^}]*border-left:\s*1px solid var\(--border\)/);
+  assert.match(sidebarStyles, /\.directory-group-body a\.current::before/);
+  assert.match(sidebarStyles, /-webkit-line-clamp:\s*2/);
   assert.match(articleToc, /class="article-toc-sidebar"/);
   assert.match(articleToc, /aria-label="当前文章目录"/);
   assert.match(articleToc, /id="toc-list"/);
@@ -111,6 +119,8 @@ test('左侧栏移除个人资料并保留目录、标签目录，文章 TOC 独
   assert.match(interaction, /ArrowLeft/);
   assert.match(interaction, /ArrowRight/);
   assert.match(interaction, /aria-selected/);
+  assert.match(interaction, /dataset\.keyboardNav\s*=\s*'true'/);
+  assert.match(sidebarStyles, /data-keyboard-nav='true'/);
 });
 
 test('实验室身份替代个人元素，亮色主题采用浅蓝底并保留红金蓝强调色', () => {
