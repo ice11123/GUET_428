@@ -362,12 +362,12 @@ test('管理台加载完整状态卡样式，首页状态名称面向公开网�
   assert.doesNotMatch(publicStatus, /管理台前端/);
 });
 
-test('首页维护记录有固定上限并提供完整归档页', () => {
+test('首页维护记录保持紧凑上限并提供完整归档页', () => {
   const home = readSource('pages/index.astro');
   const archive = readSource('pages/maintenance.astro');
   const maintenance = readSource('content/maintenance.md');
 
-  assert.match(home, /maintenanceEntries\.slice\(0, 5\)/);
+  assert.match(home, /maintenanceEntries\.slice\(0, 3\)/);
   assert.match(home, /withBase\('\/maintenance\/'\)/);
   assert.match(home, /class="maintenance-empty"/);
   assert.match(home, /class="maintenance-title-block"/);
@@ -380,6 +380,30 @@ test('首页维护记录有固定上限并提供完整归档页', () => {
   assert.match(archive, /parseMaintenance\(maintenanceSource\)/);
   assert.match(archive, /entries\.map/);
   assert.doesNotMatch(maintenance, /GUET_428 实验室博客建立|从现有博客/);
+});
+
+test('静态公共页隐藏伪发布日期并保持单友链卡片合适宽度', () => {
+  const layout = readSource('layouts/PublicContentLayout.astro');
+  const about = readSource('pages/about.astro');
+  const friends = readSource('pages/friends.astro');
+  const friendLinks = readSource('components/widgets/FriendLinks.astro');
+
+  assert.match(layout, /showDate\?: boolean/);
+  assert.match(layout, /showDate\s*=\s*true/);
+  assert.match(layout, /\{showDate\s*&&\s*\(/);
+  assert.match(about, /showDate=\{false\}/);
+  assert.match(friends, /showDate=\{false\}/);
+  assert.match(friends, /withBase\('\/friends\/blog-test2-avatar\.jpg'\)/);
+  assert.match(friendLinks, /data-count=\{links\.length\}/);
+  assert.match(friendLinks, /data-count='1'[\s\S]*grid-template-columns:\s*minmax\(0,\s*720px\)/);
+});
+
+test('公共状态卡片使用紧凑密度且移动端不保留固定高度', () => {
+  const publicStatus = readSource('components/home/PublicStatus.astro');
+
+  assert.match(publicStatus, /min-height:\s*6\.4rem/);
+  assert.match(publicStatus, /max-width:\s*539px[\s\S]*min-height:\s*0/);
+  assert.doesNotMatch(publicStatus, /min-height:\s*8\.4rem/);
 });
 
 test('四个实验室分组共享顺序、固定路由和受控管理台输入', () => {

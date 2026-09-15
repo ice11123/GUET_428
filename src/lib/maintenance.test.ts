@@ -28,11 +28,11 @@ test('仓库维护记录包含已核实的近期公告', async () => {
   const entries = await parseMaintenance(readFileSync(maintenancePath, 'utf8'));
 
   assert.deepEqual(entries.slice(0, 5).map((entry) => entry.title), [
+    '公共页面与信息密度精修',
     '维护公告与目录导航修复',
     '实验室分组首页重构',
     '发布服务接入与管理台显示修复',
     '代码审查与可靠性修复',
-    '浅蓝主题与首页布局修正',
   ]);
   assert.ok(entries.every((entry) => entry.html.includes('<li>')));
 });

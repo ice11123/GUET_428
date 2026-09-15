@@ -2,6 +2,7 @@
 import Layout from '../layouts/PublicContentLayout.astro';
 import FriendLinks from '../components/widgets/FriendLinks.astro';
 import { SITE_START_DATE } from '../consts';
+import { withBase } from '../lib/urls';
 
 const friends = [
   {
@@ -9,7 +10,7 @@ const friends = [
     label: '个人博客',
     description: '记录学习、技术实践与思考的个人博客。',
     url: 'https://ice11123.github.io/blog_test2/',
-    image: 'https://ice11123.github.io/blog_test2/avatar.jpg',
+    image: withBase('/friends/blog-test2-avatar.jpg'),
   },
 ];
 ---
@@ -18,6 +19,7 @@ const friends = [
   title="相关链接"
   description="实验室相关资源链接"
   pubDate={SITE_START_DATE}
+  showDate={false}
 >
   <p class="friends-lead">从实验室资料出发，连接持续记录技术实践与学习思考的站点。</p>
   <FriendLinks links={friends} />

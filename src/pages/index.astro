@@ -58,7 +58,7 @@ const websiteLd = {
 
 const allPosts = await getCollection('blog');
 const maintenanceEntries = await parseMaintenance(maintenanceSource);
-const recentMaintenanceEntries = maintenanceEntries.slice(0, 5);
+const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
 ---
 
 <PublicLayout title={SITE_TITLE} description={SITE_DESCRIPTION} image={homeHeroImage} sidebarMode="hidden">
