@@ -1,6 +1,17 @@
 ---
 import Layout from '../layouts/PublicContentLayout.astro';
+import FriendLinks from '../components/widgets/FriendLinks.astro';
 import { SITE_START_DATE } from '../consts';
+
+const friends = [
+  {
+    name: '离子怪的博客',
+    label: '个人博客',
+    description: '记录学习、技术实践与思考的个人博客。',
+    url: 'https://ice11123.github.io/blog_test2/',
+    image: 'https://ice11123.github.io/blog_test2/avatar.jpg',
+  },
+];
 ---
 
 <Layout
@@ -8,5 +19,35 @@ import { SITE_START_DATE } from '../consts';
   description="实验室相关资源链接"
   pubDate={SITE_START_DATE}
 >
-  <p>实验室相关资源链接正在整理中。</p>
+  <p class="friends-lead">从实验室资料出发，连接持续记录技术实践与学习思考的站点。</p>
+  <FriendLinks links={friends} />
+  <aside class="friends-note" aria-label="链接说明">
+    <span aria-hidden="true">✦</span>
+    <p><strong>互链说明</strong>：这里收录与实验室成员、技术学习和项目实践相关的长期站点。</p>
+  </aside>
 </Layout>
+
+<style>
+  .friends-lead {
+    max-width: 42rem;
+    color: var(--text-secondary, var(--foreground-dark));
+    font-size: 0.96rem;
+  }
+
+  .friends-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 1.75rem;
+    padding: 14px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl, 12px);
+    background: var(--surface-subtle, var(--muted));
+    color: var(--text-secondary, var(--foreground-dark));
+    font-size: 0.78rem;
+  }
+
+  .friends-note span { color: var(--accent); }
+  .friends-note p { margin: 0; }
+  .friends-note strong { color: var(--text-primary, var(--foreground)); }
+</style>
