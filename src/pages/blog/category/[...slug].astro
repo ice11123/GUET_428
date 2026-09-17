@@ -59,7 +59,7 @@ const collectionPageLd = {
   </p>
   {
     filtered.length > 0 ? (
-      <BlogList posts={filtered} sort="time" />
+      <BlogList posts={filtered} sort="oldest" />
     ) : (
       <p style="text-align: center; color: var(--foreground-dark);">该分类下暂无文章。</p>
     )

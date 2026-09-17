@@ -30,8 +30,8 @@ export function computeSidebarStats(posts: SidebarPost[]): SidebarStats {
   };
 }
 
-function byNewest(a: SidebarPost, b: SidebarPost): number {
-  return b.pubDate.valueOf() - a.pubDate.valueOf();
+function byOldest(a: SidebarPost, b: SidebarPost): number {
+  return a.pubDate.valueOf() - b.pubDate.valueOf();
 }
 
 export function buildArticleDirectory(posts: SidebarPost[]): ArticleDirectorySection[] {
@@ -54,7 +54,7 @@ export function buildArticleDirectory(posts: SidebarPost[]): ArticleDirectorySec
       return a.localeCompare(b, 'zh-CN');
     })
     .map(([name, groupPosts]) => {
-      const directPosts = groupPosts.filter((post) => !post.dir2).sort(byNewest);
+      const directPosts = groupPosts.filter((post) => !post.dir2).sort(byOldest);
       const nested = new Map<string, SidebarPost[]>();
 
       for (const post of groupPosts) {
@@ -71,7 +71,7 @@ export function buildArticleDirectory(posts: SidebarPost[]): ArticleDirectorySec
           .sort(([a], [b]) => a.localeCompare(b, 'zh-CN'))
           .map(([subdirectoryName, subgroupPosts]) => ({
             name: subdirectoryName,
-            posts: subgroupPosts.sort(byNewest),
+            posts: subgroupPosts.sort(byOldest),
           })),
         total: groupPosts.length,
       };

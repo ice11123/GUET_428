@@ -22,7 +22,7 @@ test('侧栏统计按一级分类和去重标签计算', () => {
   });
 });
 
-test('文章目录固定四组顺序并保留空分组，组内按日期倒序', () => {
+test('文章目录固定四组顺序并保留空分组，组内按日期正序', () => {
   const directory = buildArticleDirectory(posts);
 
   assert.deepEqual(directory.map(({ name, total }) => ({ name, total })), [
@@ -36,7 +36,7 @@ test('文章目录固定四组顺序并保留空分组，组内按日期倒序',
     name,
     slugs: posts.map((post) => post.slug),
   })), [
-    { name: '变换器', slugs: ['a', 'b'] },
+    { name: '变换器', slugs: ['b', 'a'] },
   ]);
   assert.deepEqual(directory[1].directPosts.map((post) => post.slug), ['c']);
   assert.deepEqual(directory[2].directPosts, []);

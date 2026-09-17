@@ -449,3 +449,16 @@ test('站点信息迁入关于页，演示文章归入其他并保留旧地址�
   assert.match(astroConfig, /'\/blog\/小车组\/新生入门\/02-system-architecture': `\$\{redirectBasePath\}\/blog\/小车组\/ti小车实战\/02-system-architecture\/`/);
   assert.match(astroConfig, /'\/blog\/小车组\/新生入门\/03-first-motor-run': `\$\{redirectBasePath\}\/blog\/小车组\/ti小车实战\/03-first-motor-run\/`/);
 });
+
+test('公共文章目录按学习顺序排列，近期与标签列表仍按最新优先', () => {
+  const blogList = readSource('components/blog/BlogList.astro');
+  const categoryPage = readSource('pages/blog/category/[...slug].astro');
+  const tagPage = readSource('pages/blog/tag/[tag].astro');
+  const homeShowcase = readSource('components/home/LabGroupShowcase.astro');
+
+  assert.match(blogList, /sort\?: 'time' \| 'oldest' \| 'dir'/);
+  assert.match(blogList, /sort === 'oldest'/);
+  assert.match(categoryPage, /<BlogList posts=\{filtered\} sort="oldest"/);
+  assert.match(tagPage, /<BlogList posts=\{filtered\} sort="time"/);
+  assert.match(homeShowcase, /b\.data\.pubDate\.valueOf\(\) - a\.data\.pubDate\.valueOf\(\)/);
+});

@@ -1,11 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const srcRoot = fileURLToPath(new URL('..', import.meta.url));
 const readSource = (path: string) => readFileSync(join(srcRoot, path), 'utf8');
+
+function readBlogSources(directory = join(srcRoot, 'content', 'blog')): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) return readBlogSources(path);
+    return /\.mdx?$/.test(entry.name) ? [readFileSync(path, 'utf8')] : [];
+  });
+}
+
+test('文章不再使用验收清单作为结尾', () => {
+  const posts = readBlogSources();
+  assert.ok(posts.length > 0);
+  assert.doesNotMatch(posts.join('\n'), /^## 本篇验收清单$/m);
+  assert.doesNotMatch(posts.join('\n'), /^- \[ \] /m);
+});
 
 test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
   const beginnerPaths = [
@@ -32,7 +47,7 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
   }
 
   assert.match(beginnerPosts[0], /做实验的固定循环/);
-  assert.match(beginnerPosts[1], /电压挡并联、电流挡串联/);
+  assert.match(beginnerPosts[1], /测电压时并联，测电流时串联/);
   assert.match(beginnerPosts[2], /GPIO 不能直接驱动电机/);
   assert.doesNotMatch(beginnerPosts.join('\n'), /PB14|TIMG8|MSPM0G3519/);
 
