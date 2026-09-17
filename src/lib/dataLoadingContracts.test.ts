@@ -7,6 +7,24 @@ import { fileURLToPath } from 'node:url';
 const srcRoot = fileURLToPath(new URL('..', import.meta.url));
 const readSource = (path: string) => readFileSync(join(srcRoot, path), 'utf8');
 
+test('小车组新生入门系列包含按顺序发布的首批三篇文章', () => {
+  const postPaths = [
+    'content/blog/小车组/新生入门/01-ti-car-start.md',
+    'content/blog/小车组/新生入门/02-system-architecture.md',
+    'content/blog/小车组/新生入门/03-first-motor-run.md',
+  ];
+
+  const posts = postPaths.map(readSource);
+  for (const post of posts) {
+    assert.match(post, /dir1: "小车组"/);
+    assert.match(post, /dir2: "新生入门"/);
+  }
+
+  assert.match(posts[0], /活动构建配置明确指向 `MSPM0G3519`/);
+  assert.match(posts[1], /TIMG8 \/ `QEI_LEFT`/);
+  assert.match(posts[2], /软件输入范围是 `-1000` 到 `1000`/);
+});
+
 test('PublicStatus 可见或手动触发，共享请求且初次不连续重试', () => {
   const source = readSource('scripts/public-status.ts');
   const component = readSource('components/home/PublicStatus.astro');
