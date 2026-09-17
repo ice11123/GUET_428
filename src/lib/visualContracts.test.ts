@@ -271,8 +271,9 @@ test('主页壁纸支持可访问的点击、触屏手势与桌面滚轮展开',
   assert.match(home, /aria-expanded="false"/);
   assert.doesNotMatch(home, /view-transition-name:\s*home-wallpaper/);
   assert.match(home, /data-home-lower-motion/);
-  assert.match(home, /\.cover-full-stage[\s\S]*clip-path:\s*inset\(0\)/);
-  assert.match(home, /\.cover-full-stage\s*>\s*:global\(\.cover-full-photo\)[\s\S]*transform-origin:\s*0 0/);
+  assert.match(home, /data-home-cover-viewport/);
+  assert.match(home, /\.cover-full-stage[\s\S]*overflow:\s*hidden[\s\S]*transform-origin:\s*0 0/);
+  assert.match(home, /\.cover-full-viewport\s*>\s*:global\(\.cover-full-photo\)[\s\S]*transform-origin:\s*0 0/);
   assert.match(home, /prefers-reduced-motion:\s*reduce/);
   assert.match(home, /const homeHeroWidths = \[640, 960, 1440\]/);
   assert.match(home, /const homeHeroFullWidths = \[1440, 1920, 2560, 3840\]/);
@@ -284,7 +285,7 @@ test('主页壁纸支持可访问的点击、触屏手势与桌面滚轮展开',
   assert.doesNotMatch(home, /homeHeroAvifSources/);
   assert.doesNotMatch(home, /\.cover-expand-toggle\s*\{[^}]*backdrop-filter:\s*none/);
   assert.match(home, /data-full-srcset/);
-  assert.match(home, /\.cover-full-stage::after/);
+  assert.match(home, /\.cover-full-viewport::after/);
   assert.match(home, /max-width:\s*none/);
   assert.match(home, /\.home-drawer\[data-waves-visible='true'\]/);
   assert.doesNotMatch(home, /\.home-cover\[data-waves-visible='true'\]/);
@@ -318,7 +319,11 @@ test('主页壁纸支持可访问的点击、触屏手势与桌面滚轮展开',
   assert.match(motion, /addEventListener\('touchmove',\s*handleTouchMove,\s*\{\s*passive:\s*false\s*\}\)/);
   assert.match(motion, /pageScrollY:\s*window\.scrollY/);
   assert.doesNotMatch(motion, /isPointInside/);
-  assert.match(motion, /clipPath:\s*`inset\(/);
+  assert.doesNotMatch(motion, /clipPath|clip-path/);
+  assert.match(motion, /createProgressAnimation\(stage/);
+  assert.match(motion, /createProgressAnimation\(viewport/);
+  assert.match(motion, /scale3d\(\$\{1 \/ scaleX\}, \$\{1 \/ scaleY\}/);
+  assert.doesNotMatch(motion, /for \(const animation of dragAnimations\.splice\(0\)\) animation\.cancel\(\);[\s\S]{0,400}settleStable/);
   assert.match(geometry, /drawerDistance:\s*Math\.max\(input\.stageRect\.bottom\s*-\s*input\.sourceRect\.bottom/);
   assert.match(motion, /createProgressAnimation\(drawer/);
   assert.match(motion, /createProgressAnimation\(fullImage/);
@@ -328,7 +333,8 @@ test('主页壁纸支持可访问的点击、触屏手势与桌面滚轮展开',
   assert.match(motion, /requestHighResolution\(\)/);
   assert.match(motion, /IntersectionObserver/);
   assert.doesNotMatch(motion, /startViewTransition/);
-  assert.doesNotMatch(motion, /addEventListener\('scroll'/);
+  assert.match(motion, /window\.addEventListener\('scroll',\s*syncWheelListener,\s*\{\s*passive:\s*true\s*\}\)/);
+  assert.match(motion, /document\.addEventListener\('wheel',\s*observeNativeWheel,\s*\{\s*passive:\s*true\s*\}\)/);
   assert.doesNotMatch(motion, /aria-modal|event\.key\s*===\s*'Tab'/);
   assert.match(motion, /prefers-reduced-motion:\s*reduce/);
   assert.match(motion, /event\.detail\s*===\s*0\s*\?\s*0/);
