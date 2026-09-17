@@ -3,7 +3,7 @@ title: "02｜TI_CAR 软硬件架构全景"
 description: "以当前 MSPM0G3519 工程为准，梳理电源、TB6612、电机编码器、循迹模块与 APP/BSP 软件分层。"
 pubDate: 2026-09-17T10:00:00+08:00
 dir1: "小车组"
-dir2: "新生入门"
+dir2: "TI小车实战"
 tags: ["系统架构", "MSPM0G3519", "TB6612", "编码器"]
 ---
 
@@ -220,5 +220,5 @@ README 适合快速入门，但不能取代构建配置。源码存在也不能�
 2. 从 `Task_PID()` 追到 `Load_Motor_PWM()`，找到左右目标速度和实际速度在哪里进入控制器。
 3. 从 `Tracker_ReadInputs()` 追到 `TrackMode_App.c`，说明黑线偏左时为何需要改变两侧目标速度。
 
-**上一篇：**[01｜小车组新生入门](../01-ti-car-start/)　
+**上一篇：**[01｜认识实验室 TI_CAR](../01-ti-car-start/)　
 **下一篇：**[03｜第一次让电机安全转起来](../03-first-motor-run/)

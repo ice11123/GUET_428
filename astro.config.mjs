@@ -30,6 +30,9 @@ export default defineConfig({
   outDir: './dist',
   redirects: {
     '/blog/博客功能介绍与演示/欢迎使用': `${redirectBasePath}/blog/其他/欢迎使用/`,
+    '/blog/小车组/新生入门/01-ti-car-start': `${redirectBasePath}/blog/小车组/ti小车实战/01-ti-car-start/`,
+    '/blog/小车组/新生入门/02-system-architecture': `${redirectBasePath}/blog/小车组/ti小车实战/02-system-architecture/`,
+    '/blog/小车组/新生入门/03-first-motor-run': `${redirectBasePath}/blog/小车组/ti小车实战/03-first-motor-run/`,
   },
 
   integrations: [

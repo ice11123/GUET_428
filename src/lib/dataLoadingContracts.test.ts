@@ -7,22 +7,41 @@ import { fileURLToPath } from 'node:url';
 const srcRoot = fileURLToPath(new URL('..', import.meta.url));
 const readSource = (path: string) => readFileSync(join(srcRoot, path), 'utf8');
 
-test('小车组新生入门系列包含按顺序发布的首批三篇文章', () => {
-  const postPaths = [
-    'content/blog/小车组/新生入门/01-ti-car-start.md',
-    'content/blog/小车组/新生入门/02-system-architecture.md',
-    'content/blog/小车组/新生入门/03-first-motor-run.md',
+test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
+  const beginnerPaths = [
+    'content/blog/小车组/新生入门/01-first-week.md',
+    'content/blog/小车组/新生入门/02-electrical-basics.md',
+    'content/blog/小车组/新生入门/03-mcu-gpio-pwm.md',
+  ];
+  const projectPaths = [
+    'content/blog/小车组/TI小车实战/01-ti-car-start.md',
+    'content/blog/小车组/TI小车实战/02-system-architecture.md',
+    'content/blog/小车组/TI小车实战/03-first-motor-run.md',
   ];
 
-  const posts = postPaths.map(readSource);
-  for (const post of posts) {
+  const beginnerPosts = beginnerPaths.map(readSource);
+  const projectPosts = projectPaths.map(readSource);
+
+  for (const post of beginnerPosts) {
     assert.match(post, /dir1: "小车组"/);
     assert.match(post, /dir2: "新生入门"/);
   }
+  for (const post of projectPosts) {
+    assert.match(post, /dir1: "小车组"/);
+    assert.match(post, /dir2: "TI小车实战"/);
+  }
 
-  assert.match(posts[0], /活动构建配置明确指向 `MSPM0G3519`/);
-  assert.match(posts[1], /TIMG8 \/ `QEI_LEFT`/);
-  assert.match(posts[2], /软件输入范围是 `-1000` 到 `1000`/);
+  assert.match(beginnerPosts[0], /做实验的固定循环/);
+  assert.match(beginnerPosts[1], /电压挡并联、电流挡串联/);
+  assert.match(beginnerPosts[2], /GPIO 不能直接驱动电机/);
+  assert.doesNotMatch(beginnerPosts.join('\n'), /PB14|TIMG8|MSPM0G3519/);
+
+  assert.match(projectPosts[0], /活动构建配置明确指向 `MSPM0G3519`/);
+  assert.match(projectPosts[1], /TIMG8 \/ `QEI_LEFT`/);
+  assert.match(projectPosts[2], /软件输入范围是 `-1000` 到 `1000`/);
+
+  const constants = readSource('consts.ts');
+  assert.match(constants, /小车组: \['新生入门', 'TI小车实战'\]/);
 });
 
 test('PublicStatus 可见或手动触发，共享请求且初次不连续重试', () => {

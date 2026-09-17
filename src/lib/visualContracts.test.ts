@@ -445,4 +445,7 @@ test('站点信息迁入关于页，演示文章归入其他并保留旧地址�
   assert.match(demo, /dir1: "其他"/);
   assert.match(astroConfig, /redirectBasePath = basePath === '\/'/);
   assert.match(astroConfig, /'\/blog\/博客功能介绍与演示\/欢迎使用': `\$\{redirectBasePath\}\/blog\/其他\/欢迎使用\/`/);
+  assert.match(astroConfig, /'\/blog\/小车组\/新生入门\/01-ti-car-start': `\$\{redirectBasePath\}\/blog\/小车组\/ti小车实战\/01-ti-car-start\/`/);
+  assert.match(astroConfig, /'\/blog\/小车组\/新生入门\/02-system-architecture': `\$\{redirectBasePath\}\/blog\/小车组\/ti小车实战\/02-system-architecture\/`/);
+  assert.match(astroConfig, /'\/blog\/小车组\/新生入门\/03-first-motor-run': `\$\{redirectBasePath\}\/blog\/小车组\/ti小车实战\/03-first-motor-run\/`/);
 });
