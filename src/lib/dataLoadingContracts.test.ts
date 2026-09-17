@@ -44,6 +44,8 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
   for (const post of projectPosts) {
     assert.match(post, /dir1: "小车组"/);
     assert.match(post, /dir2: "TI小车实战"/);
+    assert.match(post, /^## 本篇总结$/m);
+    assert.doesNotMatch(post, /^## (动手练习|读完后应该能回答)$/m);
   }
 
   assert.match(beginnerPosts[0], /做实验的固定循环/);
