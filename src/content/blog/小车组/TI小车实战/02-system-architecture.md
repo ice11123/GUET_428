@@ -3,6 +3,7 @@ title: "02｜TI_CAR 软硬件架构全景"
 description: "以当前 MSPM0G3519 工程为准，梳理电源、TB6612、电机编码器、循迹模块与 APP/BSP 软件分层。"
 pubDate: 2026-09-17T10:00:00+08:00
 updatedDate: 2026-09-17T18:40:00+08:00
+author: "离子怪"
 dir1: "小车组"
 dir2: "TI小车实战"
 tags: ["系统架构", "MSPM0G3519", "TB6612", "编码器"]

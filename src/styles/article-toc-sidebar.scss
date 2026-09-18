@@ -85,14 +85,10 @@
     }
   }
 
-  @media (max-width: 1199px) and (min-width: 1000px) {
+  @media (max-width: 1199px) and (min-width: 1100px) {
     .article-toc-sidebar { width: 210px; }
     .article-toc-scroll { padding-inline: 14px; }
     .toc-area .position-indicator { left: 8px; }
-  }
-
-  @media (max-width: 999.98px) {
-    .article-toc-sidebar { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {

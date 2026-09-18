@@ -5,6 +5,7 @@ import Footer from '../components/layout/Footer.astro';
 import Header from '../components/layout/Header.astro';
 import PersistentSidebar from '../components/layout/PersistentSidebar.astro';
 import ArticleTocSidebar from '../components/layout/ArticleTocSidebar.astro';
+import MobileSidebarControls from '../components/layout/MobileSidebarControls.astro';
 import SearchModal from '../components/blog/SearchModal.astro';
 import { getSidebarData } from '../lib/blogData';
 
@@ -52,6 +53,7 @@ const sidebarPosts = showSidebar ? await getSidebarData() : [];
       </main>
       {sidebarMode === 'article' && <ArticleTocSidebar />}
     </div>
+    {showSidebar && <MobileSidebarControls hasArticleToc={sidebarMode === 'article'} />}
     <Footer />
     <SearchModal />
   </body>
@@ -89,12 +91,12 @@ const sidebarPosts = showSidebar ? await getSidebarData() : [];
     grid-template-columns: minmax(0, 1fr);
   }
 
-  @media (max-width: 1199px) and (min-width: 1000px) {
+  @media (max-width: 1199px) and (min-width: 1100px) {
     .public-layout-frame { grid-template-columns: 220px minmax(0, 1fr); }
     .public-layout-frame.has-article-toc { grid-template-columns: 220px minmax(0, 1fr) 210px; }
   }
 
-  @media (max-width: 999.98px) {
+  @media (max-width: 1099.98px) {
     .public-layout-frame { display: block; }
   }
 </style>

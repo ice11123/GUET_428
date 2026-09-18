@@ -144,13 +144,39 @@ test('实验室身份替代个人元素，亮色主题采用浅蓝底并保留�
   assert.match(home, /color:\s*var\(--accent-tertiary\)/);
 });
 
-test('统一侧栏在桌面常驻并在小屏让位给正文', () => {
+test('统一侧栏在桌面常驻并在小屏改为可展开抽屉', () => {
   const styles = readSource('styles/persistent-sidebar.scss');
+  const mobileStyles = readSource('styles/mobile-sidebars.scss');
+  const mobileScript = readSource('scripts/mobile-sidebars.ts');
   assert.match(styles, /position:\s*sticky/);
   assert.match(styles, /top:\s*81px/);
   assert.match(styles, /height:\s*calc\(100dvh\s*-\s*81px\)/);
-  assert.match(styles, /max-width:\s*999\.98px[\s\S]*\.persistent-sidebar\s*\{\s*display:\s*none/);
+  assert.doesNotMatch(styles, /\.persistent-sidebar\s*\{\s*display:\s*none/);
+  assert.match(mobileStyles, /max-width:\s*1099\.98px/);
+  assert.match(mobileStyles, /transform:\s*translate3d\(-100%,\s*0,\s*0\)/);
+  assert.match(mobileStyles, /transform:\s*translate3d\(100%,\s*0,\s*0\)/);
+  assert.match(mobileStyles, /transition:\s*transform 240ms var\(--ease-drawer\)/);
+  assert.match(mobileScript, /ResizeObserver\(updateHeaderHeight\)/);
+  assert.match(mobileScript, /leftDrawer\.inert|siteSidebar\.inert/);
+  assert.match(mobileScript, /event\.key === 'Escape'/);
   assert.match(styles, /prefers-reduced-motion:\s*reduce/);
+});
+
+test('文章页使用紧凑导语、独立正文版心与可追溯作者', () => {
+  const layout = readSource('layouts/BlogPost.astro');
+  const styles = readSource('styles/blog-post.scss');
+  const constants = readSource('consts.ts');
+
+  assert.match(layout, /class="article-breadcrumbs"/);
+  assert.match(layout, /class="article-description"/);
+  assert.match(layout, /class="article-meta"/);
+  assert.match(layout, /class="post-author-link" href=\{PERSONAL_BLOG_URL\}/);
+  assert.match(layout, /class="prose article-content"/);
+  assert.match(layout, /查看源文件/);
+  assert.match(constants, /PERSONAL_BLOG_URL\s*=\s*'https:\/\/ice11123\.github\.io\/blog_test2\/'/);
+  assert.match(styles, /\.article-header h1\s*\{[\s\S]*text-wrap:\s*balance/);
+  assert.match(styles, /\.post-author-link\s*\{[\s\S]*color:\s*#b4232c/);
+  assert.match(styles, /\.blog-post-page \.prose\s*\{[\s\S]*font-size:\s*17px[\s\S]*line-height:\s*1\.86/);
 });
 
 test('非首屏样式、搜索引擎与移动端侧栏按需加载', () => {
@@ -158,6 +184,7 @@ test('非首屏样式、搜索引擎与移动端侧栏按需加载', () => {
   const htmlHead = readSource('components/layout/HtmlHead.astro');
   const sidebar = readSource('components/layout/PersistentSidebar.astro');
   const sidebarScript = readSource('scripts/persistent-sidebar.ts');
+  const publicLayout = readSource('layouts/PublicLayout.astro');
   const publicStatus = readSource('components/home/PublicStatus.astro');
   const publicContentLayout = readSource('layouts/PublicContentLayout.astro');
   const blogPostLayout = readSource('layouts/BlogPost.astro');
@@ -171,8 +198,9 @@ test('非首屏样式、搜索引擎与移动端侧栏按需加载', () => {
   assert.doesNotMatch(htmlHead, /persistent-sidebar\.scss|blog-post\.scss|system-status\.scss|katex\/dist/);
   assert.match(sidebar, /import ['"]\.\.\/\.\.\/styles\/persistent-sidebar\.scss['"]/);
   assert.doesNotMatch(sidebar, /<img|avatar/);
-  assert.match(sidebarScript, /matchMedia\(['"]\(min-width:\s*1000px\)['"]\)/);
-  assert.match(sidebarScript, /if \(!desktopSidebarQuery\.matches\) return/);
+  assert.doesNotMatch(sidebarScript, /desktopSidebarQuery|if \(!desktopSidebarQuery\.matches\) return/);
+  assert.match(publicLayout, /MobileSidebarControls/);
+  assert.match(publicLayout, /showSidebar && <MobileSidebarControls/);
   assert.match(publicStatus, /import ['"]\.\.\/\.\.\/styles\/system-status\.scss['"]/);
   assert.match(publicContentLayout, /import blogPostCss from ['"]\.\.\/styles\/blog-post\.scss\?url['"]/);
   assert.match(publicContentLayout, /<link slot="head" rel="stylesheet" href=\{blogPostCss\}/);

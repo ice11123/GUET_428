@@ -4,7 +4,7 @@ import BlogPost from '../../layouts/BlogPost.astro';
 import BlogCard from '../../components/blog/BlogCard.astro';
 import JsonLd from '../../components/blog/JsonLd.astro';
 import { resolveDirs } from '../../lib/utils';
-import { SITE_AUTHOR } from '../../consts';
+import { PERSONAL_BLOG_URL, SITE_AUTHOR } from '../../consts';
 import { blogPostPath, withBase } from '../../lib/urls';
 
 export async function getStaticPaths() {
@@ -56,8 +56,8 @@ const blogPostingLd = {
 	...(post.data.updatedDate && { dateModified: post.data.updatedDate.toISOString() }),
 	author: {
 		'@type': 'Person',
-		name: SITE_AUTHOR,
-		url: new URL(withBase('/about/'), Astro.site).href,
+		name: post.data.author ?? SITE_AUTHOR,
+		url: post.data.author ? PERSONAL_BLOG_URL : new URL(withBase('/about/'), Astro.site).href,
 	},
 	mainEntityOfPage: {
 		'@type': 'WebPage',

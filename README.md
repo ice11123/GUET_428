@@ -20,6 +20,8 @@ pnpm run build
 
 在 `src/content/blog/` 下创建 Markdown 或 MDX 文件。目录层级会自动成为文章分类。
 
+文章 frontmatter 可填写 `author` 与 `sourceUrl`。现有文章作者统一为“离子怪”，文章页作者名会链接到其个人博客；未填写作者时继续使用实验室名称。
+
 ## 站点结构
 
 - `src/consts.ts`：实验室名称、站点地址和仓库配置

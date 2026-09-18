@@ -11,6 +11,7 @@ export const SITE_AUTHOR = LAB_NAME;
 export const SITE_START_DATE = new Date('2026-09-03');
 
 export const SITE_URL = 'https://ice11123.github.io/GUET_428/';
+export const PERSONAL_BLOG_URL = 'https://ice11123.github.io/blog_test2/';
 
 // 前端原型密码门槛：这里只保存 SHA-256 哈希，不要提交真实密码。
 // 请在本地生成哈希后替换此占位符；该机制不能替代服务端认证。

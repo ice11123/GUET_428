@@ -3,6 +3,7 @@ title: "01｜认识实验室 TI_CAR：它能做什么，代码怎样跑"
 description: "面向第一次接触实验室小车的新生，介绍 MSPM0G3519 TI_CAR 的功能、信号链、代码入口与验证边界。"
 pubDate: 2026-09-17T09:00:00+08:00
 updatedDate: 2026-09-17T18:30:00+08:00
+author: "离子怪"
 dir1: "小车组"
 dir2: "TI小车实战"
 tags: ["项目实战", "MSPM0G3519", "TI_CAR"]
