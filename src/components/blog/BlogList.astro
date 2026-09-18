@@ -4,25 +4,27 @@ import type { ImageMetadata } from 'astro';
 import BlogCard from './BlogCard.astro';
 import DirectoryGroupHeader from './DirectoryGroupHeader.astro';
 import DirectoryPostRow from './DirectoryPostRow.astro';
+import DirectoryRecentLink from './DirectoryRecentLink.astro';
 import { resolveDirs } from '../../lib/utils';
+import { withBase } from '../../lib/urls';
 import { DEFAULT_LAB_GROUP } from '../../config/labGroups.ts';
 import powerGroupImage from '../../assets/groups/电源组.png';
 import flightGroupImage from '../../assets/groups/飞控组.png';
 import carGroupImage from '../../assets/groups/小车组.png';
 
 interface Props {
-  sort?: 'time' | 'oldest' | 'dir';
+  sort?: 'time' | 'oldest' | 'overview' | 'dir';
   dirOrder?: { dir1: string[]; dir2: Record<string, string[]> };
   posts?: CollectionEntry<'blog'>[];
 }
 
 type GroupVariant = 'power' | 'flight' | 'car' | 'other';
-type GroupPresentation = { variant: GroupVariant; image?: ImageMetadata };
+type GroupPresentation = { variant: GroupVariant; order: number; image?: ImageMetadata };
 const groupPresentations: Record<string, GroupPresentation> = {
-  电源组: { variant: 'power', image: powerGroupImage },
-  飞控组: { variant: 'flight', image: flightGroupImage },
-  小车组: { variant: 'car', image: carGroupImage },
-  其他: { variant: 'other' },
+  电源组: { variant: 'power', order: 0, image: powerGroupImage },
+  飞控组: { variant: 'flight', order: 1, image: flightGroupImage },
+  小车组: { variant: 'car', order: 2, image: carGroupImage },
+  其他: { variant: 'other', order: 3 },
 };
 
 const { sort = 'time', dirOrder = { dir1: [], dir2: {} }, posts: externalPosts } = Astro.props;
@@ -32,7 +34,7 @@ if (sort === 'time') posts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.d
 if (sort === 'oldest') posts = posts.sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
 
 let orderedData: Array<[string, Array<[string, CollectionEntry<'blog'>[]]>]> = [];
-if (sort === 'dir') {
+if (sort === 'dir' || sort === 'overview') {
   const grouped: Record<string, Record<string, CollectionEntry<'blog'>[]>> = {};
   for (const post of posts) {
     const dir1 = post.data.dir1 || DEFAULT_LAB_GROUP;
@@ -85,22 +87,46 @@ if (sort === 'dir') {
   .directory-subsection h3 { margin: 0; color: var(--text-primary); font-size: 0.88rem; font-weight: 720; }
   .directory-subsection-count { flex: none; color: var(--text-secondary); font-size: 0.7rem; white-space: nowrap; }
   .directory-post-list { margin: 0; padding: 0; list-style: none; }
+  .directory-overview-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.62rem 1.5rem; border-bottom: 1px solid color-mix(in srgb, var(--directory-accent) 14%, var(--border)); background: color-mix(in srgb, var(--directory-accent) 4%, var(--surface)); }
+  .directory-overview-heading p { margin: 0; color: var(--directory-accent); font-size: 0.66rem; font-weight: 760; letter-spacing: 0.1em; }
+  .directory-overview-heading a { color: var(--directory-accent); font-size: 0.72rem; font-weight: 700; text-decoration: none; }
+  .directory-recent-list { margin: 0; padding: 0; list-style: none; }
   .directory-empty { display: flex; align-items: center; gap: 0.7rem; margin: 0; padding: 1.15rem 1.5rem; color: var(--text-secondary); font-size: 0.82rem; }
   .directory-empty::before { width: 0.5rem; height: 0.5rem; border: 1px solid var(--directory-accent); border-radius: 50%; content: ''; opacity: 0.75; }
-  @media (max-width: 680px) { .directory-groups { gap: 1rem; margin-top: 1.2rem; } .directory-section { border-radius: 16px; } .directory-subsection-header { padding: 0.68rem 1rem; } .directory-empty { padding: 1rem; } }
+  @media (max-width: 680px) { .directory-groups { gap: 1rem; margin-top: 1.2rem; } .directory-section { border-radius: 16px; } .directory-subsection-header, .directory-overview-heading { padding: 0.68rem 1rem; } .directory-empty { padding: 1rem; } }
 </style>
 
 <main class="blog-list">
   {sort === 'time' || sort === 'oldest' ? (
     <ul class="card-grid">{posts.map((post) => <BlogCard post={post} />)}</ul>
+  ) : sort === 'overview' ? (
+    <div class="directory-groups">
+      {orderedData.map(([dir1, dir2List], index) => {
+        const presentation = groupPresentations[dir1] ?? { variant: 'other' as const, order: index };
+        const groupPosts = dir2List.flatMap(([, list]) => list);
+        const recentPosts = [...groupPosts].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()).slice(0, 3);
+        const groupHref = withBase(`/blog/category/${encodeURIComponent(dir1)}/`);
+        return (
+          <section class="directory-section" data-group={presentation.variant} aria-labelledby={`directory-group-${index}`}>
+            <DirectoryGroupHeader id={`directory-group-${index}`} title={dir1} count={groupPosts.length} index={presentation.order} variant={presentation.variant} image={presentation.image} href={groupHref} />
+            <div class="directory-overview-heading"><p>近期更新</p><a href={groupHref}>查看分组 <span aria-hidden="true">→</span></a></div>
+            {recentPosts.length > 0 ? (
+              <ul class="directory-recent-list">{recentPosts.map((post) => <DirectoryRecentLink post={post} />)}</ul>
+            ) : (
+              <p class="directory-empty">该分组暂无文章，内容将在后续更新。</p>
+            )}
+          </section>
+        );
+      })}
+    </div>
   ) : (
     <div class="directory-groups">
       {orderedData.map(([dir1, dir2List], index) => {
-        const presentation = groupPresentations[dir1] ?? { variant: 'other' as const };
+        const presentation = groupPresentations[dir1] ?? { variant: 'other' as const, order: index };
         const count = dir2List.reduce((total, [, list]) => total + list.length, 0);
         return (
           <section class="directory-section" data-group={presentation.variant} aria-labelledby={`directory-group-${index}`}>
-            <DirectoryGroupHeader id={`directory-group-${index}`} title={dir1} count={count} index={index} variant={presentation.variant} image={presentation.image} />
+            <DirectoryGroupHeader id={`directory-group-${index}`} title={dir1} count={count} index={presentation.order} variant={presentation.variant} image={presentation.image} />
             {dir2List.length === 0 ? (
               <p class="directory-empty">该分组暂无文章，内容将在后续更新。</p>
             ) : dir2List.map(([dir2, list]) => (

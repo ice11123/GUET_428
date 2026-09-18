@@ -5,6 +5,8 @@ import BlogList from '../../../components/blog/BlogList.astro';
 import JsonLd from '../../../components/blog/JsonLd.astro';
 import { resolveDirs } from '../../../lib/utils';
 import { LAB_GROUPS } from '../../../config/labGroups.ts';
+import { DIR2_ORDER, SITE_START_DATE } from '../../../consts';
+import { withBase } from '../../../lib/urls';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -31,6 +33,10 @@ const filtered = allPosts.filter(post => {
   if (filterDir2) return d1 === filterDir1 && d2 === filterDir2;
   return d1 === filterDir1;
 });
+const latestPostDate = filtered.reduce(
+  (latest, post) => post.data.pubDate > latest ? post.data.pubDate : latest,
+  SITE_START_DATE,
+);
 
 const pageTitle = filterDir2 ? `分类: ${filterDir1} / ${filterDir2}` : `分类: ${filterDir1}`;
 const pageDesc = `浏览 ${pageTitle} 下的所有文章`;
@@ -47,21 +53,36 @@ const collectionPageLd = {
 <Layout
   title={pageTitle}
   description={pageDesc}
-  pubDate={new Date()}
+  pubDate={latestPostDate}
   dir1={filterDir1}
   dir2={filterDir2}
   tags={[]}
+  hidePageHeader={!filterDir2}
 >
   <JsonLd slot="head" data={collectionPageLd} />
 
-  <p style="color: var(--foreground-dark); text-align: center; margin-bottom: 1.5rem;">
-    共 {filtered.length} 篇文章
-  </p>
   {
-    filtered.length > 0 ? (
+    !filterDir2 ? (
+      <section class="category-directory" aria-label={`${filterDir1}文章目录`}>
+        <header class="category-directory-heading">
+          <a href={withBase('/blog/')}>← 返回全部分组</a>
+          <span><strong>{filtered.length}</strong> 篇文章</span>
+        </header>
+        <BlogList posts={filtered} sort="dir" dirOrder={{ dir1: [filterDir1], dir2: DIR2_ORDER }} />
+      </section>
+    ) : filtered.length > 0 ? (
       <BlogList posts={filtered} sort="oldest" />
     ) : (
       <p style="text-align: center; color: var(--foreground-dark);">该分类下暂无文章。</p>
     )
   }
 </Layout>
+
+<style>
+  .category-directory { min-width: 0; padding-bottom: 3rem; }
+  .category-directory-heading { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 0.75rem 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 86%, transparent); }
+  .category-directory-heading a { color: var(--accent); font-size: 0.76rem; font-weight: 700; text-decoration: none; }
+  .category-directory-heading > span { flex: none; padding: 0.45rem 0.7rem; border: 1px solid color-mix(in srgb, var(--border) 82%, transparent); border-radius: 999px; color: var(--text-secondary); font-size: 0.75rem; }
+  .category-directory-heading strong { color: var(--text-primary); }
+  @media (max-width: 680px) { .category-directory { padding-bottom: 2rem; } }
+</style>

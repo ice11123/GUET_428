@@ -28,14 +28,14 @@ const collectionPageLd = {
       <div class="blog-directory-copy">
         <p class="blog-directory-eyebrow">Knowledge Index</p>
         <h1 id="blog-directory-title">文章目录</h1>
-        <p>按实验室分组与专题定位内容，文章依照建议学习顺序排列。</p>
+        <p>先选择实验室分组，再进入分组查看专题与完整学习目录。</p>
       </div>
       <div class="blog-directory-actions">
         <span class="blog-directory-total"><strong>{posts.length}</strong> 篇文章</span>
         <a href={withBase('/blog/tags/')}>所有标签 <span aria-hidden="true">→</span></a>
       </div>
     </header>
-    <BlogList posts={posts} sort="dir" dirOrder={dirOrder} />
+    <BlogList posts={posts} sort="overview" dirOrder={dirOrder} />
   </section>
 </Layout>
 

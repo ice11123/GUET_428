@@ -484,7 +484,7 @@ test('公共文章目录按学习顺序排列，近期与标签列表仍按最�
   const tagPage = readSource('pages/blog/tag/[tag].astro');
   const homeShowcase = readSource('components/home/LabGroupShowcase.astro');
 
-  assert.match(blogList, /sort\?: 'time' \| 'oldest' \| 'dir'/);
+  assert.match(blogList, /sort\?: 'time' \| 'oldest' \| 'overview' \| 'dir'/);
   assert.match(blogList, /sort === 'oldest'/);
   assert.match(categoryPage, /<BlogList posts=\{filtered\} sort="oldest"/);
   assert.match(tagPage, /<BlogList posts=\{filtered\} sort="time"/);
@@ -506,6 +506,33 @@ test('文章目录使用真实内容统计并明确区分一级分组与二级�
   assert.match(list, /未归入专题/);
   assert.match(list, /该分组暂无文章，内容将在后续更新/);
   assert.match(list, /sort === 'time' \|\| sort === 'oldest'/);
+});
+
+test('总目录只显示四个一级分组与近期文章，分类页再展开完整目录', () => {
+  const page = readSource('pages/blog/index.astro');
+  const list = readSource('components/blog/BlogList.astro');
+  const category = readSource('pages/blog/category/[...slug].astro');
+  const recent = readSource('components/blog/DirectoryRecentLink.astro');
+
+  assert.match(page, /sort="overview"/);
+  assert.match(list, /slice\(0, 3\)/);
+  assert.match(list, /sort === 'overview'/);
+  assert.match(list, /DirectoryRecentLink post=\{post\}/);
+  assert.match(recent, /blogPostPath\(post\.id\)/);
+  assert.match(category, /sort="dir"/);
+  assert.match(category, /dir1: \[filterDir1\]/);
+  assert.match(category, /hidePageHeader=\{!filterDir2\}/);
+  assert.doesNotMatch(category, /new Date\(\)/);
+});
+
+test('首页近期文章标题直达文章且分组入口保持独立', () => {
+  const showcase = readSource('components/home/LabGroupShowcase.astro');
+
+  assert.match(showcase, /<article[\s\S]*class:list=\{\['group-entry'/);
+  assert.match(showcase, /class="group-link"[\s\S]*blog\/category/);
+  assert.match(showcase, /href=\{blogPostPath\(post\.id\)\}/);
+  assert.match(showcase, /class="group-enter"/);
+  assert.doesNotMatch(showcase, /<a\s+[\s\S]{0,120}class:list=\{\['group-entry'/);
 });
 
 test('实验室文章目录复用三组响应式素材并保持紧凑文章行', () => {

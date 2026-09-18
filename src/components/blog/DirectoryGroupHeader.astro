@@ -9,9 +9,10 @@ interface Props {
   index: number;
   variant: 'power' | 'flight' | 'car' | 'other';
   image?: ImageMetadata;
+  href?: string;
 }
 
-const { id, title, count, index, variant, image } = Astro.props;
+const { id, title, count, index, variant, image, href } = Astro.props;
 const order = String(index + 1).padStart(2, '0');
 const imageWidths = [180, 280, 360];
 const sources = image
@@ -25,6 +26,7 @@ const toSrcset = (items: Awaited<ReturnType<typeof getImage>>[]) =>
 ---
 
 <header class="directory-group-header" data-group={variant}>
+  {href && <a class="directory-group-link" href={href} aria-label={`进入${title}目录`}></a>}
   <div class="directory-group-identity">
     <span class="directory-group-icon" aria-hidden="true">
       {variant === 'power' ? (
@@ -56,6 +58,9 @@ const toSrcset = (items: Awaited<ReturnType<typeof getImage>>[]) =>
 <style>
   .directory-group-header { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; min-height: 9rem; padding: 1.35rem 14rem 1.35rem 1.5rem; overflow: hidden; border-bottom: 1px solid color-mix(in srgb, var(--directory-accent) 25%, var(--border)); background: radial-gradient(circle at 80% 30%, color-mix(in srgb, var(--directory-accent) 15%, transparent), transparent 32%), linear-gradient(112deg, color-mix(in srgb, var(--directory-accent) 12%, var(--surface)) 0%, var(--surface) 65%); }
   .directory-group-header::before { position: absolute; z-index: -1; inset: 0; background-image: linear-gradient(color-mix(in srgb, var(--directory-accent) 8%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--directory-accent) 8%, transparent) 1px, transparent 1px); background-size: 22px 22px; content: ''; mask-image: linear-gradient(90deg, transparent 38%, black 100%); opacity: 0.62; pointer-events: none; }
+  .directory-group-link { position: absolute; z-index: 4; inset: 0; border-radius: inherit; }
+  .directory-group-link:focus-visible { outline: 3px solid var(--focus); outline-offset: -4px; }
+  .directory-group-header:has(.directory-group-link) { transition: background-color 160ms var(--ease-out); }
   .directory-group-identity { position: relative; z-index: 2; display: flex; align-items: center; gap: 1rem; min-width: 0; }
   .directory-group-icon { display: grid; flex: none; width: 3.7rem; height: 3.7rem; place-items: center; border: 1px solid color-mix(in srgb, var(--directory-accent) 38%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--directory-accent) 12%, var(--surface)); color: var(--directory-accent); box-shadow: inset 0 1px 0 color-mix(in srgb, white 55%, transparent); }
   .directory-group-icon svg { width: 2rem; height: 2rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
@@ -69,6 +74,8 @@ const toSrcset = (items: Awaited<ReturnType<typeof getImage>>[]) =>
   .directory-group-art { position: absolute; z-index: 1; top: 50%; right: 0.9rem; width: 13rem; height: 8.5rem; pointer-events: none; transform: translateY(-45%); }
   .directory-group-art img { width: 100%; height: 100%; object-fit: contain; object-position: center; filter: drop-shadow(0 14px 13px color-mix(in srgb, #071827 22%, transparent)); }
   .directory-group-watermark { position: absolute; z-index: 0; right: 1.8rem; bottom: -1rem; color: color-mix(in srgb, var(--directory-accent) 9%, transparent); font-size: 8.5rem; font-weight: 900; line-height: 1; letter-spacing: -0.08em; pointer-events: none; }
+  @media (hover: hover) and (pointer: fine) { .directory-group-header:has(.directory-group-link:hover) { background-color: color-mix(in srgb, var(--directory-accent) 5%, var(--surface)); } }
   @media (max-width: 680px) { .directory-group-header { min-height: 7.6rem; padding: 1rem 7.7rem 1rem 1rem; } .directory-group-header::before { mask-image: linear-gradient(90deg, transparent 28%, black 100%); } .directory-group-identity { align-items: flex-start; gap: 0.7rem; } .directory-group-icon { width: 2.8rem; height: 2.8rem; border-radius: 14px; } .directory-group-icon svg { width: 1.5rem; height: 1.5rem; } .directory-group-summary { display: none; } .directory-group-count { top: 0.65rem; right: 0.65rem; } .directory-group-art { right: 0.2rem; width: 7.6rem; height: 6.3rem; transform: translateY(-36%); opacity: 0.82; } .directory-group-watermark { right: 0.8rem; font-size: 6.8rem; } }
   @media (max-width: 390px) { .directory-group-header { padding-right: 6.4rem; } .directory-group-icon { display: none; } .directory-group-art { width: 6.5rem; opacity: 0.68; } }
+  @media (prefers-reduced-motion: reduce) { .directory-group-header:has(.directory-group-link) { transition: none; } }
 </style>
