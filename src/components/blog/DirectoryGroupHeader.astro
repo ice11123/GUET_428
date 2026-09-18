@@ -1,0 +1,74 @@
+---
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  id: string;
+  title: string;
+  count: number;
+  index: number;
+  variant: 'power' | 'flight' | 'car' | 'other';
+  image?: ImageMetadata;
+}
+
+const { id, title, count, index, variant, image } = Astro.props;
+const order = String(index + 1).padStart(2, '0');
+const imageWidths = [180, 280, 360];
+const sources = image
+  ? {
+      avif: await Promise.all(imageWidths.map((width) => getImage({ src: image, width, format: 'avif', quality: 62 }))),
+      webp: await Promise.all(imageWidths.map((width) => getImage({ src: image, width, format: 'webp', quality: 74 }))),
+    }
+  : null;
+const toSrcset = (items: Awaited<ReturnType<typeof getImage>>[]) =>
+  items.map((item, sourceIndex) => `${item.src} ${imageWidths[sourceIndex]}w`).join(', ');
+---
+
+<header class="directory-group-header" data-group={variant}>
+  <div class="directory-group-identity">
+    <span class="directory-group-icon" aria-hidden="true">
+      {variant === 'power' ? (
+        <svg viewBox="0 0 48 48" role="presentation"><path d="M27 5 12 27h11l-2 16 15-23H25l2-15Z"></path></svg>
+      ) : variant === 'flight' ? (
+        <svg viewBox="0 0 48 48" role="presentation"><circle cx="24" cy="24" r="5"></circle><path d="M20 21 10 11M28 21l10-10M20 27 10 37M28 27l10 10M5 11h10M33 11h10M5 37h10M33 37h10"></path></svg>
+      ) : variant === 'car' ? (
+        <svg viewBox="0 0 48 48" role="presentation"><path d="M10 30v-9l5-8h18l5 8v9M8 30h32v7H8zM15 37v4M33 37v4"></path><circle cx="15" cy="27" r="2"></circle><circle cx="33" cy="27" r="2"></circle></svg>
+      ) : (
+        <svg viewBox="0 0 48 48" role="presentation"><path d="M8 11h14a6 6 0 0 1 6 6v23H14a6 6 0 0 1-6-6V11Z"></path><path d="M40 11H29a6 6 0 0 0-6 6v23h11a6 6 0 0 0 6-6V11Z"></path></svg>
+      )}
+    </span>
+    <div class="directory-group-copy">
+      <p class="directory-level-label"><span>{order}</span> 一级分组</p>
+      <h2 id={id}>{title}</h2>
+      <p class="directory-group-summary">{count > 0 ? `${count} 篇文章，按专题与学习顺序整理` : '分组已建立，内容正在整理'}</p>
+    </div>
+  </div>
+  <span class="directory-group-count"><strong>{count}</strong> 篇</span>
+  {image && sources ? (
+    <picture class="directory-group-art" aria-hidden="true">
+      <source type="image/avif" srcset={toSrcset(sources.avif)} sizes="(max-width: 680px) 120px, 210px" />
+      <source type="image/webp" srcset={toSrcset(sources.webp)} sizes="(max-width: 680px) 120px, 210px" />
+      <img src={sources.webp.at(-1)?.src ?? image.src} width={image.width} height={image.height} alt="" loading="lazy" decoding="async" />
+    </picture>
+  ) : <span class="directory-group-watermark" aria-hidden="true">04</span>}
+</header>
+
+<style>
+  .directory-group-header { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; min-height: 9rem; padding: 1.35rem 14rem 1.35rem 1.5rem; overflow: hidden; border-bottom: 1px solid color-mix(in srgb, var(--directory-accent) 25%, var(--border)); background: radial-gradient(circle at 80% 30%, color-mix(in srgb, var(--directory-accent) 15%, transparent), transparent 32%), linear-gradient(112deg, color-mix(in srgb, var(--directory-accent) 12%, var(--surface)) 0%, var(--surface) 65%); }
+  .directory-group-header::before { position: absolute; z-index: -1; inset: 0; background-image: linear-gradient(color-mix(in srgb, var(--directory-accent) 8%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--directory-accent) 8%, transparent) 1px, transparent 1px); background-size: 22px 22px; content: ''; mask-image: linear-gradient(90deg, transparent 38%, black 100%); opacity: 0.62; pointer-events: none; }
+  .directory-group-identity { position: relative; z-index: 2; display: flex; align-items: center; gap: 1rem; min-width: 0; }
+  .directory-group-icon { display: grid; flex: none; width: 3.7rem; height: 3.7rem; place-items: center; border: 1px solid color-mix(in srgb, var(--directory-accent) 38%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--directory-accent) 12%, var(--surface)); color: var(--directory-accent); box-shadow: inset 0 1px 0 color-mix(in srgb, white 55%, transparent); }
+  .directory-group-icon svg { width: 2rem; height: 2rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+  .directory-group-copy { min-width: 0; }
+  .directory-level-label { display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.3rem; color: var(--directory-accent); font-size: 0.67rem; font-weight: 780; letter-spacing: 0.12em; line-height: 1.2; }
+  .directory-level-label span { display: inline-grid; width: 1.7rem; height: 1.3rem; place-items: center; border-radius: 999px; background: var(--directory-accent); color: var(--surface); font-size: 0.6rem; letter-spacing: 0.04em; }
+  h2 { margin: 0; color: var(--text-primary); font-size: clamp(1.28rem, 2.5vw, 1.72rem); line-height: 1.2; text-wrap: balance; }
+  .directory-group-summary { margin: 0.38rem 0 0; color: var(--text-secondary); font-size: 0.76rem; line-height: 1.5; }
+  .directory-group-count { position: absolute; z-index: 3; top: 1rem; right: 1rem; display: inline-flex; align-items: baseline; gap: 0.25rem; padding: 0.38rem 0.58rem; border: 1px solid color-mix(in srgb, var(--directory-accent) 28%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--surface) 78%, transparent); color: var(--text-secondary); font-size: 0.68rem; backdrop-filter: blur(6px); }
+  .directory-group-count strong { color: var(--directory-accent); font-size: 0.84rem; }
+  .directory-group-art { position: absolute; z-index: 1; top: 50%; right: 0.9rem; width: 13rem; height: 8.5rem; pointer-events: none; transform: translateY(-45%); }
+  .directory-group-art img { width: 100%; height: 100%; object-fit: contain; object-position: center; filter: drop-shadow(0 14px 13px color-mix(in srgb, #071827 22%, transparent)); }
+  .directory-group-watermark { position: absolute; z-index: 0; right: 1.8rem; bottom: -1rem; color: color-mix(in srgb, var(--directory-accent) 9%, transparent); font-size: 8.5rem; font-weight: 900; line-height: 1; letter-spacing: -0.08em; pointer-events: none; }
+  @media (max-width: 680px) { .directory-group-header { min-height: 7.6rem; padding: 1rem 7.7rem 1rem 1rem; } .directory-group-header::before { mask-image: linear-gradient(90deg, transparent 28%, black 100%); } .directory-group-identity { align-items: flex-start; gap: 0.7rem; } .directory-group-icon { width: 2.8rem; height: 2.8rem; border-radius: 14px; } .directory-group-icon svg { width: 1.5rem; height: 1.5rem; } .directory-group-summary { display: none; } .directory-group-count { top: 0.65rem; right: 0.65rem; } .directory-group-art { right: 0.2rem; width: 7.6rem; height: 6.3rem; transform: translateY(-36%); opacity: 0.82; } .directory-group-watermark { right: 0.8rem; font-size: 6.8rem; } }
+  @media (max-width: 390px) { .directory-group-header { padding-right: 6.4rem; } .directory-group-icon { display: none; } .directory-group-art { width: 6.5rem; opacity: 0.68; } }
+</style>

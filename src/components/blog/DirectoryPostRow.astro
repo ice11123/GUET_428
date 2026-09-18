@@ -1,0 +1,47 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import FormattedDate from './FormattedDate.astro';
+import { blogPostPath } from '../../lib/urls';
+interface Props { post: CollectionEntry<'blog'>; index: number; }
+const { post, index } = Astro.props;
+const order = String(index + 1).padStart(2, '0');
+const tags = post.data.tags ?? [];
+const visibleTags = tags.slice(0, 3);
+const hiddenTagCount = Math.max(0, tags.length - visibleTags.length);
+const description = post.data.description.replace(/<[^>]+>/g, '').trim();
+---
+<li class="directory-post">
+  <a class="directory-post-link" href={blogPostPath(post.id)}>
+    <span class="directory-post-order" aria-hidden="true">{order}</span>
+    <div class="directory-post-copy">
+      <h4>{post.data.title}</h4><p>{description}</p>
+      <div class="directory-post-meta">
+        <time><FormattedDate date={post.data.pubDate} /></time>
+        {visibleTags.length > 0 && <span class="directory-post-tags" aria-label={`标签：${tags.join('、')}`}>
+          {visibleTags.map((tag) => <span class="directory-post-tag">{tag}</span>)}
+          {hiddenTagCount > 0 && <span class="directory-post-tag directory-post-tag-more">+{hiddenTagCount}</span>}
+        </span>}
+      </div>
+    </div>
+    <span class="directory-post-arrow" aria-hidden="true">→</span>
+  </a>
+</li>
+<style>
+  .directory-post { margin: 0; padding: 0; list-style: none; }
+  .directory-post + .directory-post { border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent); }
+  .directory-post-link { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr) auto; align-items: center; gap: 1.1rem; min-width: 0; padding: 1.08rem 1.5rem; color: inherit; text-decoration: none; transition: background-color 160ms var(--ease-out), transform 120ms var(--ease-out); }
+  .directory-post-order { align-self: start; padding-top: 0.14rem; color: var(--directory-accent); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.68rem; font-weight: 750; letter-spacing: 0.06em; opacity: 0.82; }
+  .directory-post-copy { min-width: 0; }
+  .directory-post h4 { margin: 0; color: var(--text-primary); font-size: 1rem; font-weight: 700; line-height: 1.45; text-wrap: pretty; }
+  .directory-post p { display: -webkit-box; margin: 0.38rem 0 0; overflow: hidden; color: var(--text-secondary); font-size: 0.82rem; line-height: 1.55; text-overflow: ellipsis; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+  .directory-post-meta { display: flex; align-items: center; gap: 0.7rem; min-width: 0; margin-top: 0.65rem; color: var(--text-secondary); font-size: 0.7rem; }
+  .directory-post-meta time { flex: none; opacity: 0.82; }
+  .directory-post-tags { display: flex; align-items: center; gap: 0.28rem; min-width: 0; overflow: hidden; }
+  .directory-post-tag { display: inline-flex; align-items: center; max-width: 8rem; padding: 0.12rem 0.44rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--directory-accent) 27%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--directory-accent) 7%, transparent); color: var(--directory-accent); line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+  .directory-post-tag-more { flex: none; color: var(--text-secondary); }
+  .directory-post-arrow { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid color-mix(in srgb, var(--border) 82%, transparent); border-radius: 50%; color: var(--directory-accent); transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out); }
+  .directory-post-link:active { transform: scale(0.995); }
+  @media (hover: hover) and (pointer: fine) { .directory-post-link:hover { background: color-mix(in srgb, var(--directory-accent) 5%, transparent); } .directory-post-link:hover .directory-post-arrow { border-color: var(--directory-accent); background: var(--directory-accent); color: var(--surface); transform: translateX(3px); } }
+  @media (max-width: 680px) { .directory-post-link { grid-template-columns: 1.55rem minmax(0, 1fr) auto; gap: 0.5rem; padding: 0.95rem 1rem; } .directory-post p { -webkit-line-clamp: 2; } .directory-post-meta { align-items: flex-start; flex-direction: column; gap: 0.45rem; } .directory-post-arrow { width: 1.75rem; height: 1.75rem; } }
+  @media (prefers-reduced-motion: reduce) { .directory-post-link, .directory-post-arrow { transition: none; } .directory-post-link:active, .directory-post-link:hover .directory-post-arrow { transform: none; } }
+</style>

@@ -490,3 +490,38 @@ test('公共文章目录按学习顺序排列，近期与标签列表仍按最�
   assert.match(tagPage, /<BlogList posts=\{filtered\} sort="time"/);
   assert.match(homeShowcase, /b\.data\.pubDate\.valueOf\(\) - a\.data\.pubDate\.valueOf\(\)/);
 });
+
+test('文章目录使用真实内容统计并明确区分一级分组与二级专题', () => {
+  const page = readSource('pages/blog/index.astro');
+  const list = readSource('components/blog/BlogList.astro');
+  const groupHeader = readSource('components/blog/DirectoryGroupHeader.astro');
+
+  assert.match(page, /const posts = await getCollection\('blog'\)/);
+  assert.match(page, /SITE_START_DATE/);
+  assert.match(page, /hidePageHeader=\{true\}/);
+  assert.match(page, /\{posts\.length\}<\/strong> 篇文章/);
+  assert.doesNotMatch(page, /new Date\(\)/);
+  assert.match(groupHeader, /一级分组/);
+  assert.match(list, /二级专题/);
+  assert.match(list, /未归入专题/);
+  assert.match(list, /该分组暂无文章，内容将在后续更新/);
+  assert.match(list, /sort === 'time' \|\| sort === 'oldest'/);
+});
+
+test('实验室文章目录复用三组响应式素材并保持紧凑文章行', () => {
+  const list = readSource('components/blog/BlogList.astro');
+  const groupHeader = readSource('components/blog/DirectoryGroupHeader.astro');
+  const postRow = readSource('components/blog/DirectoryPostRow.astro');
+
+  assert.match(list, /电源组\.png[\s\S]*飞控组\.png[\s\S]*小车组\.png/);
+  assert.match(list, /data-group=\{presentation\.variant\}/);
+  assert.match(groupHeader, /format: 'avif'/);
+  assert.match(groupHeader, /format: 'webp'/);
+  assert.match(groupHeader, /loading="lazy"/);
+  assert.match(groupHeader, /object-fit:\s*contain/);
+  assert.match(postRow, /tags\.slice\(0, 3\)/);
+  assert.match(postRow, /\+\{hiddenTagCount\}/);
+  assert.match(postRow, /-webkit-line-clamp:\s*1/);
+  assert.match(postRow, /@media \(hover: hover\) and \(pointer: fine\)/);
+  assert.match(postRow, /@media \(prefers-reduced-motion: reduce\)/);
+});

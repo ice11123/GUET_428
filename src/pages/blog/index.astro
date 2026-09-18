@@ -1,36 +1,58 @@
 ---
-import { DIR1_ORDER, DIR2_ORDER } from '../../consts';
+import { getCollection } from 'astro:content';
+import { DIR1_ORDER, DIR2_ORDER, SITE_START_DATE } from '../../consts';
 import Layout from '../../layouts/PublicContentLayout.astro';
 import BlogList from '../../components/blog/BlogList.astro';
 import JsonLd from '../../components/blog/JsonLd.astro';
 import { withBase } from '../../lib/urls';
 
-const dirOrder = {
-  dir1: DIR1_ORDER,
-  dir2: DIR2_ORDER,
-};
-
+const posts = await getCollection('blog');
+const latestPostDate = posts.reduce(
+  (latest, post) => post.data.pubDate > latest ? post.data.pubDate : latest,
+  SITE_START_DATE,
+);
+const dirOrder = { dir1: DIR1_ORDER, dir2: DIR2_ORDER };
 const collectionPageLd = {
-	'@context': 'https://schema.org',
-	'@type': 'CollectionPage',
-	name: '博客目录',
-	description: '这里可以看到我的所有博客和文章',
-	url: new URL(withBase('/blog/'), Astro.site).href,
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: '实验室文章目录',
+  description: '按实验室分组、专题与学习顺序浏览全部文章',
+  url: new URL(withBase('/blog/'), Astro.site).href,
 };
 ---
 
-<Layout
-	title="目录"
-	description="这里可以看到我的所有博客和文章"
-	pubDate={new Date()}
->
-	<JsonLd slot="head" data={collectionPageLd} />
-
-	<div style="text-align: center; margin-bottom: 1.5rem;">
-		<a href={withBase('/blog/tags/')} style="color: var(--accent-light); text-decoration: none; font-size: 0.9rem;">
-			查看所有标签 →
-		</a>
-	</div>
-
-	<BlogList sort="dir" dirOrder={dirOrder} />
+<Layout title="文章目录" description="按实验室分组、专题与学习顺序浏览全部文章" pubDate={latestPostDate} hidePageHeader={true}>
+  <JsonLd slot="head" data={collectionPageLd} />
+  <section class="blog-directory-page" aria-labelledby="blog-directory-title">
+    <header class="blog-directory-hero">
+      <div class="blog-directory-copy">
+        <p class="blog-directory-eyebrow">Knowledge Index</p>
+        <h1 id="blog-directory-title">文章目录</h1>
+        <p>按实验室分组与专题定位内容，文章依照建议学习顺序排列。</p>
+      </div>
+      <div class="blog-directory-actions">
+        <span class="blog-directory-total"><strong>{posts.length}</strong> 篇文章</span>
+        <a href={withBase('/blog/tags/')}>所有标签 <span aria-hidden="true">→</span></a>
+      </div>
+    </header>
+    <BlogList posts={posts} sort="dir" dirOrder={dirOrder} />
+  </section>
 </Layout>
+
+<style>
+  .blog-directory-page { min-width: 0; padding-bottom: 3rem; }
+  .blog-directory-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; padding: 1.55rem 0 1.4rem; border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent); }
+  .blog-directory-copy { min-width: 0; }
+  .blog-directory-eyebrow { margin: 0 0 0.45rem; color: var(--accent); font-size: 0.7rem; font-weight: 780; letter-spacing: 0.16em; line-height: 1.2; text-transform: uppercase; }
+  .blog-directory-hero h1 { margin: 0; color: var(--text-primary); font-size: clamp(2rem, 5vw, 3.15rem); line-height: 1.08; letter-spacing: -0.045em; }
+  .blog-directory-copy > p:last-child { max-width: 40rem; margin: 0.7rem 0 0; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; }
+  .blog-directory-actions { display: flex; align-items: center; gap: 0.7rem; flex: none; }
+  .blog-directory-total, .blog-directory-actions a { display: inline-flex; align-items: center; min-height: 2.25rem; padding: 0.45rem 0.72rem; border-radius: 999px; font-size: 0.78rem; line-height: 1; white-space: nowrap; }
+  .blog-directory-total { border: 1px solid color-mix(in srgb, var(--border) 82%, transparent); color: var(--text-secondary); }
+  .blog-directory-total strong { margin-right: 0.25rem; color: var(--text-primary); font-size: 0.9rem; }
+  .blog-directory-actions a { gap: 0.35rem; border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--accent); font-weight: 700; text-decoration: none; transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 120ms var(--ease-out); }
+  .blog-directory-actions a:active { transform: scale(0.97); }
+  @media (hover: hover) and (pointer: fine) { .blog-directory-actions a:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); } }
+  @media (max-width: 680px) { .blog-directory-page { padding-bottom: 2rem; } .blog-directory-hero { align-items: flex-start; flex-direction: column; gap: 1.05rem; padding: 1rem 0 1.15rem; } .blog-directory-actions { justify-content: space-between; width: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .blog-directory-actions a { transition: none; } .blog-directory-actions a:active { transform: none; } }
+</style>

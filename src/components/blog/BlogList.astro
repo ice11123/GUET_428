@@ -1,116 +1,123 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
 import BlogCard from './BlogCard.astro';
+import DirectoryGroupHeader from './DirectoryGroupHeader.astro';
+import DirectoryPostRow from './DirectoryPostRow.astro';
 import { resolveDirs } from '../../lib/utils';
 import { DEFAULT_LAB_GROUP } from '../../config/labGroups.ts';
+import powerGroupImage from '../../assets/groups/电源组.png';
+import flightGroupImage from '../../assets/groups/飞控组.png';
+import carGroupImage from '../../assets/groups/小车组.png';
 
 interface Props {
   sort?: 'time' | 'oldest' | 'dir';
-  dirOrder?: {
-    dir1: string[];
-    dir2: Record<string, string[]>;
-  };
+  dirOrder?: { dir1: string[]; dir2: Record<string, string[]> };
   posts?: CollectionEntry<'blog'>[];
 }
 
+type GroupVariant = 'power' | 'flight' | 'car' | 'other';
+type GroupPresentation = { variant: GroupVariant; image?: ImageMetadata };
+const groupPresentations: Record<string, GroupPresentation> = {
+  电源组: { variant: 'power', image: powerGroupImage },
+  飞控组: { variant: 'flight', image: flightGroupImage },
+  小车组: { variant: 'car', image: carGroupImage },
+  其他: { variant: 'other' },
+};
+
 const { sort = 'time', dirOrder = { dir1: [], dir2: {} }, posts: externalPosts } = Astro.props;
 let posts = externalPosts ?? await getCollection('blog');
-
-posts = posts.map(post => ({ ...post, data: { ...post.data, ...resolveDirs(post) } }));
-
-if (sort === 'time') {
-  posts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-} else if (sort === 'oldest') {
-  posts = posts.sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
-}
+posts = posts.map((post) => ({ ...post, data: { ...post.data, ...resolveDirs(post) } }));
+if (sort === 'time') posts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+if (sort === 'oldest') posts = posts.sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
 
 let orderedData: Array<[string, Array<[string, CollectionEntry<'blog'>[]]>]> = [];
-
 if (sort === 'dir') {
   const grouped: Record<string, Record<string, CollectionEntry<'blog'>[]>> = {};
   for (const post of posts) {
-    const d1 = post.data.dir1 || DEFAULT_LAB_GROUP;
-    const d2 = post.data.dir2 || '';
-    grouped[d1] ??= {};
-    grouped[d1][d2] ??= [];
-    grouped[d1][d2].push(post);
+    const dir1 = post.data.dir1 || DEFAULT_LAB_GROUP;
+    const dir2 = post.data.dir2 || '';
+    grouped[dir1] ??= {};
+    grouped[dir1][dir2] ??= [];
+    grouped[dir1][dir2].push(post);
   }
-
-  const finalOrder: typeof orderedData = [];
 
   const orderedDir1 = [
     ...dirOrder.dir1,
-    ...Object.keys(grouped).filter(d1 => !dirOrder.dir1.includes(d1)).sort((a, b) => a.localeCompare(b)),
+    ...Object.keys(grouped).filter((dir1) => !dirOrder.dir1.includes(dir1)).sort((a, b) => a.localeCompare(b)),
   ];
 
-  for (const d1 of orderedDir1) {
-    const dir2Map = grouped[d1] ?? {};
+  orderedData = orderedDir1.map((dir1) => {
+    const dir2Map = grouped[dir1] ?? {};
+    const expectedDir2 = dirOrder.dir2[dir1] || [];
     const dir2List: Array<[string, CollectionEntry<'blog'>[]]> = [];
-
-    // 1. 先渲染你配置的 dir2
-    const expectedDir2 = dirOrder.dir2[d1] || [];
-    for (const d2 of expectedDir2) {
-      if (dir2Map[d2]) {
-        const sortedPosts = dir2Map[d2].sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
-        dir2List.push([d2, sortedPosts]);
-      }
+    for (const dir2 of expectedDir2) {
+      if (dir2Map[dir2]) dir2List.push([dir2, dir2Map[dir2].sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf())]);
     }
-
-    // 2. 自动渲染没有二级目录的文章（dir2 = ""）
-    if (dir2Map[""]) {
-      const sortedPosts = dir2Map[""].sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
-      dir2List.push(["", sortedPosts]);
+    if (dir2Map['']) dir2List.push(['', dir2Map[''].sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf())]);
+    for (const dir2 of Object.keys(dir2Map)) {
+      if (dir2 === '' || expectedDir2.includes(dir2)) continue;
+      dir2List.push([dir2, dir2Map[dir2].sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf())]);
     }
-
-    // 3. 渲染未在配置中的其他二级目录
-    for (const d2 of Object.keys(dir2Map)) {
-      if (d2 === "" || expectedDir2.includes(d2)) continue;
-      const sortedPosts = dir2Map[d2].sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
-      dir2List.push([d2, sortedPosts]);
-    }
-
-    finalOrder.push([d1, dir2List]);
-  }
-
-  orderedData = finalOrder;
+    return [dir1, dir2List];
+  });
 }
 ---
 
 <style>
-  .card-grid {
-    margin: 8px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    place-items: center; /* 单个元素时自动居中 */
-    gap: 20px;
-    list-style: none;
-    padding: 0;
-  }
-  .directory-empty { margin: 0 8px 28px; color: var(--text-secondary); font-size: 14px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); place-items: center; gap: 20px; margin: 8px; padding: 0; list-style: none; }
+  .blog-list, .directory-groups { min-width: 0; }
+  .directory-groups { display: grid; gap: 1.6rem; margin-top: 1.75rem; }
+  .directory-section { --directory-accent: var(--accent); overflow: hidden; border: 1px solid color-mix(in srgb, var(--directory-accent) 25%, var(--border)); border-radius: 20px; background: color-mix(in srgb, var(--surface) 95%, transparent); box-shadow: 0 16px 42px color-mix(in srgb, var(--text-primary) 6%, transparent); }
+  .directory-section[data-group='flight'] { --directory-accent: #3c78a9; }
+  .directory-section[data-group='car'] { --directory-accent: #397f70; }
+  .directory-section[data-group='other'] { --directory-accent: var(--accent-tertiary); }
+  :global([data-theme='dark']) .directory-section[data-group='flight'] { --directory-accent: #8fc9f4; }
+  :global([data-theme='dark']) .directory-section[data-group='car'] { --directory-accent: #81cdbb; }
+  .directory-subsection + .directory-subsection { border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent); }
+  .directory-subsection-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.72rem 1.5rem; border-bottom: 1px solid color-mix(in srgb, var(--directory-accent) 16%, var(--border)); background: color-mix(in srgb, var(--directory-accent) 5%, var(--surface)); }
+  .directory-subsection-title { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
+  .directory-branch-mark { position: relative; display: block; flex: none; width: 1.45rem; height: 1.45rem; border: 1px solid color-mix(in srgb, var(--directory-accent) 32%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--directory-accent) 9%, transparent); }
+  .directory-branch-mark::before, .directory-branch-mark::after { position: absolute; background: var(--directory-accent); content: ''; opacity: 0.8; }
+  .directory-branch-mark::before { top: 0.34rem; left: 0.43rem; width: 1px; height: 0.68rem; }
+  .directory-branch-mark::after { top: 0.72rem; left: 0.43rem; width: 0.52rem; height: 1px; }
+  .directory-subsection-label { margin: 0 0 0.08rem; color: var(--directory-accent); font-size: 0.58rem; font-weight: 780; letter-spacing: 0.1em; line-height: 1.15; }
+  .directory-subsection h3 { margin: 0; color: var(--text-primary); font-size: 0.88rem; font-weight: 720; }
+  .directory-subsection-count { flex: none; color: var(--text-secondary); font-size: 0.7rem; white-space: nowrap; }
+  .directory-post-list { margin: 0; padding: 0; list-style: none; }
+  .directory-empty { display: flex; align-items: center; gap: 0.7rem; margin: 0; padding: 1.15rem 1.5rem; color: var(--text-secondary); font-size: 0.82rem; }
+  .directory-empty::before { width: 0.5rem; height: 0.5rem; border: 1px solid var(--directory-accent); border-radius: 50%; content: ''; opacity: 0.75; }
+  @media (max-width: 680px) { .directory-groups { gap: 1rem; margin-top: 1.2rem; } .directory-section { border-radius: 16px; } .directory-subsection-header { padding: 0.68rem 1rem; } .directory-empty { padding: 1rem; } }
 </style>
 
-<main>
+<main class="blog-list">
   {sort === 'time' || sort === 'oldest' ? (
-    <ul class="card-grid">
-      {posts.map((post) => <BlogCard post={post} />)}
-    </ul>
+    <ul class="card-grid">{posts.map((post) => <BlogCard post={post} />)}</ul>
   ) : (
-    <div>
-      {(orderedData || []).map(([dir1, dir2List]) => (
-        <div>
-          <h2 class="mk-title">{dir1}</h2>
-          {dir2List.length === 0 && <p class="directory-empty">该分组暂无文章。</p>}
-          {dir2List.map(([dir2, list]) => (
-            <div>
-              <!-- 空 dir2 不显示标题，但会显示文章 -->
-              {dir2 && <h3 class="mk-title">{dir2}</h3>}
-              <ul class="card-grid">
-                {list.map(post => <BlogCard post={post} level={4} />)}
-              </ul>
-            </div>
-          ))}
-        </div>
-      ))}
+    <div class="directory-groups">
+      {orderedData.map(([dir1, dir2List], index) => {
+        const presentation = groupPresentations[dir1] ?? { variant: 'other' as const };
+        const count = dir2List.reduce((total, [, list]) => total + list.length, 0);
+        return (
+          <section class="directory-section" data-group={presentation.variant} aria-labelledby={`directory-group-${index}`}>
+            <DirectoryGroupHeader id={`directory-group-${index}`} title={dir1} count={count} index={index} variant={presentation.variant} image={presentation.image} />
+            {dir2List.length === 0 ? (
+              <p class="directory-empty">该分组暂无文章，内容将在后续更新。</p>
+            ) : dir2List.map(([dir2, list]) => (
+              <section class="directory-subsection" aria-label={dir2 || `${dir1}未归入专题的文章`}>
+                <header class="directory-subsection-header">
+                  <div class="directory-subsection-title">
+                    <span class="directory-branch-mark" aria-hidden="true"></span>
+                    <div><p class="directory-subsection-label">二级专题</p><h3>{dir2 || '未归入专题'}</h3></div>
+                  </div>
+                  <span class="directory-subsection-count">{list.length} 篇</span>
+                </header>
+                <ul class="directory-post-list">{list.map((post, postIndex) => <DirectoryPostRow post={post} index={postIndex} />)}</ul>
+              </section>
+            ))}
+          </section>
+        );
+      })}
     </div>
   )}
 </main>
