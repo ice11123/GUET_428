@@ -32,6 +32,13 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
     'content/blog/小车组/TI小车实战/01-ti-car-start.md',
     'content/blog/小车组/TI小车实战/02-system-architecture.md',
     'content/blog/小车组/TI小车实战/03-first-motor-run.md',
+    'content/blog/小车组/TI小车实战/04-software-architecture.md',
+    'content/blog/小车组/TI小车实战/05-motor-execution-chain.md',
+    'content/blog/小车组/TI小车实战/06-encoder-motion-metrics.md',
+    'content/blog/小车组/TI小车实战/07-speed-position-control.md',
+    'content/blog/小车组/TI小车实战/08-line-tracking-system.md',
+    'content/blog/小车组/TI小车实战/09-observability-and-hmi.md',
+    'content/blog/小车组/TI小车实战/10-integration-and-delivery.md',
   ];
 
   const beginnerPosts = beginnerPaths.map(readSource);
@@ -46,6 +53,8 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
     assert.match(post, /dir2: "TI小车实战"/);
     assert.match(post, /^## 本篇总结$/m);
     assert.doesNotMatch(post, /^## (动手练习|读完后应该能回答)$/m);
+    assert.match(post, /MSPM0G35XX/);
+    assert.doesNotMatch(post, /MSPM0G3507|MSPM0G3519/);
   }
 
   assert.match(beginnerPosts[0], /做实验的固定循环/);
@@ -53,9 +62,16 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
   assert.match(beginnerPosts[2], /GPIO 不能直接驱动电机/);
   assert.doesNotMatch(beginnerPosts.join('\n'), /PB14|TIMG8|MSPM0G3519/);
 
-  assert.match(projectPosts[0], /活动构建配置明确指向 `MSPM0G3519`/);
-  assert.match(projectPosts[1], /TIMG8 \/ `QEI_LEFT`/);
-  assert.match(projectPosts[2], /软件输入范围是 `-1000` 到 `1000`/);
+  assert.match(projectPosts[0], /整体—部分—整体/);
+  assert.match(projectPosts[1], /可重复构建/);
+  assert.match(projectPosts[2], /分级上电流程/);
+  assert.match(projectPosts[3], /合作式调度/);
+  assert.match(projectPosts[4], /`-1000` 到 `1000`/);
+  assert.match(projectPosts[5], /硬件 QEI/);
+  assert.match(projectPosts[6], /速度内环/);
+  assert.match(projectPosts[7], /阶段状态机/);
+  assert.match(projectPosts[8], /可观测性/);
+  assert.match(projectPosts[9], /交付包应包含什么/);
 
   const constants = readSource('consts.ts');
   assert.match(constants, /小车组: \['新生入门', 'TI小车实战'\]/);
