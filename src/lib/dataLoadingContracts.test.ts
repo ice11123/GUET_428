@@ -63,15 +63,23 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
   assert.doesNotMatch(beginnerPosts.join('\n'), /PB14|TIMG8|MSPM0G3519/);
 
   assert.match(projectPosts[0], /整体—部分—整体/);
-  assert.match(projectPosts[1], /可重复构建/);
-  assert.match(projectPosts[2], /分级上电流程/);
-  assert.match(projectPosts[3], /合作式调度/);
-  assert.match(projectPosts[4], /`-1000` 到 `1000`/);
-  assert.match(projectPosts[5], /硬件 QEI/);
-  assert.match(projectPosts[6], /速度内环/);
-  assert.match(projectPosts[7], /阶段状态机/);
-  assert.match(projectPosts[8], /可观测性/);
+  assert.match(projectPosts[0], /非抢占式任务调度器/);
+  assert.match(projectPosts[1], /优先级不等于抢占/);
+  assert.match(projectPosts[1], /Encoder.*10 ms/s);
+  assert.match(projectPosts[2], /TB6612/);
+  assert.match(projectPosts[2], /`-1000` 到 `1000`/);
+  assert.match(projectPosts[3], /硬件 QEI/);
+  assert.match(projectPosts[3], /TIMG8.*TIMG9/s);
+  assert.match(projectPosts[4], /速度内环/);
+  assert.match(projectPosts[4], /一阶低通/);
+  assert.match(projectPosts[5], /五路循迹/);
+  assert.match(projectPosts[5], /低通再求微分/);
+  assert.match(projectPosts[6], /ICM42688_ENABLE = 0U/);
+  assert.match(projectPosts[6], /当前模块默认关闭/);
+  assert.match(projectPosts[7], /阻塞串口/);
+  assert.match(projectPosts[8], /统一停机/);
   assert.match(projectPosts[9], /交付包应包含什么/);
+  assert.match(projectPosts[9], /初始化—启动—感知—决策—控制—观测—完成/);
 
   const constants = readSource('consts.ts');
   assert.match(constants, /小车组: \['新生入门', 'TI小车实战'\]/);
