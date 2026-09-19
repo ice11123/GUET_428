@@ -70,7 +70,7 @@ if (sort === 'dir' || sort === 'overview') {
   .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); place-items: center; gap: 20px; margin: 8px; padding: 0; list-style: none; }
   .blog-list, .directory-groups { min-width: 0; }
   .directory-groups { display: grid; gap: 1.6rem; margin-top: 1.75rem; }
-  .directory-section { --directory-accent: var(--accent); overflow: hidden; border: 1px solid color-mix(in srgb, var(--directory-accent) 25%, var(--border)); border-radius: 20px; background: color-mix(in srgb, var(--surface) 95%, transparent); box-shadow: 0 16px 42px color-mix(in srgb, var(--text-primary) 6%, transparent); }
+  .directory-section { --directory-accent: var(--accent); overflow: hidden; border: 1px solid color-mix(in srgb, var(--directory-accent) 25%, var(--border)); border-radius: 20px; background: color-mix(in srgb, var(--surface) 95%, transparent); box-shadow: 0 16px 42px color-mix(in srgb, var(--text-primary) 6%, transparent); transform-style: preserve-3d; transition: border-color 170ms ease, box-shadow 170ms ease, transform 180ms var(--ease-out); }
   .directory-section[data-group='flight'] { --directory-accent: #3c78a9; }
   .directory-section[data-group='car'] { --directory-accent: #397f70; }
   .directory-section[data-group='other'] { --directory-accent: var(--accent-tertiary); }
@@ -93,7 +93,16 @@ if (sort === 'dir' || sort === 'overview') {
   .directory-recent-list { margin: 0; padding: 0; list-style: none; }
   .directory-empty { display: flex; align-items: center; gap: 0.7rem; margin: 0; padding: 1.15rem 1.5rem; color: var(--text-secondary); font-size: 0.82rem; }
   .directory-empty::before { width: 0.5rem; height: 0.5rem; border: 1px solid var(--directory-accent); border-radius: 50%; content: ''; opacity: 0.75; }
+  .directory-section:has(.directory-group-link:active) { transform: perspective(1100px) translateY(-1px) scale(.996); }
+  @media (hover: hover) and (pointer: fine) {
+    .directory-section:has(.directory-group-link:hover) {
+      border-color: color-mix(in srgb, var(--directory-accent) 58%, var(--border));
+      box-shadow: 0 25px 58px color-mix(in srgb, var(--text-primary) 12%, transparent);
+      transform: perspective(1100px) translateY(-4px) rotateX(.4deg);
+    }
+  }
   @media (max-width: 680px) { .directory-groups { gap: 1rem; margin-top: 1.2rem; } .directory-section { border-radius: 16px; } .directory-subsection-header, .directory-overview-heading { padding: 0.68rem 1rem; } .directory-empty { padding: 1rem; } }
+  @media (prefers-reduced-motion: reduce) { .directory-section { transition-duration: 0ms; } .directory-section:has(.directory-group-link:hover), .directory-section:has(.directory-group-link:active) { transform: none; } }
 </style>
 
 <main class="blog-list">

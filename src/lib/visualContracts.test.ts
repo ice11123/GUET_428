@@ -525,14 +525,24 @@ test('总目录只显示四个一级分组与近期文章，分类页再展开�
   assert.doesNotMatch(category, /new Date\(\)/);
 });
 
-test('首页近期文章标题直达文章且分组入口保持独立', () => {
+test('首页分组整卡可进入目录且近期文章保留独立命中反馈', () => {
   const showcase = readSource('components/home/LabGroupShowcase.astro');
+  const list = readSource('components/blog/BlogList.astro');
+  const groupHeader = readSource('components/blog/DirectoryGroupHeader.astro');
 
   assert.match(showcase, /<article[\s\S]*class:list=\{\['group-entry'/);
-  assert.match(showcase, /class="group-link"[\s\S]*blog\/category/);
+  assert.match(showcase, /class="group-card-link"[\s\S]*blog\/category/);
   assert.match(showcase, /href=\{blogPostPath\(post\.id\)\}/);
   assert.match(showcase, /class="group-enter"/);
+  assert.match(showcase, /pointer-events:\s*none/);
+  assert.match(showcase, /\.group-recent li a[\s\S]*pointer-events:\s*auto/);
+  assert.match(showcase, /\.group-entry:has\(\.group-card-link:hover\)/);
+  assert.match(showcase, /\.group-recent a:hover[\s\S]*transform:\s*translateX\(3px\)/);
+  assert.doesNotMatch(showcase, /\.group-entry:has\(a:hover\)/);
   assert.doesNotMatch(showcase, /<a\s+[\s\S]{0,120}class:list=\{\['group-entry'/);
+  assert.match(list, /\.directory-section:has\(\.directory-group-link:hover\)/);
+  assert.match(groupHeader, /cursor:\s*pointer/);
+  assert.match(groupHeader, /\.directory-group-header:has\(\.directory-group-link:hover\) \.directory-group-art/);
 });
 
 test('实验室文章目录复用三组响应式素材并保持紧凑文章行', () => {

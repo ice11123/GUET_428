@@ -50,6 +50,23 @@ try {
       if (metrics.theme !== theme) throw new Error(`${target.name}/${theme}: 主题初始化错误`);
       if (consoleErrors.length > 0) throw new Error(`${target.name}/${theme}: console errors: ${consoleErrors.join(' | ')}`);
 
+      if (target.name === 'desktop') {
+        await page.locator('.directory-group-link').first().hover();
+        await page.waitForTimeout(220);
+        const groupHoverTransform = await page.locator('.directory-section').first().evaluate((node) => getComputedStyle(node).transform);
+        if (groupHoverTransform === 'none') throw new Error(`${target.name}/${theme}: 一级分组悬停没有伪 3D 反馈`);
+        await page.screenshot({ path: `${output}-${target.name}-${theme}-group-hover.png`, fullPage: true });
+
+        await page.locator('.directory-recent-item a').first().hover();
+        await page.waitForTimeout(220);
+        const separatedFeedback = await page.locator('.directory-recent-item a').first().evaluate((link) => ({
+          groupTransform: getComputedStyle(link.closest('.directory-section')).transform,
+          recentBackground: getComputedStyle(link).backgroundColor,
+        }));
+        if (separatedFeedback.groupTransform !== 'none') throw new Error(`${target.name}/${theme}: 近期文章悬停错误触发父分组位移`);
+        if (separatedFeedback.recentBackground === 'rgba(0, 0, 0, 0)') throw new Error(`${target.name}/${theme}: 近期文章缺少独立悬停反馈`);
+      }
+
       await page.screenshot({ path: `${output}-${target.name}-${theme}.png`, fullPage: true });
       results.push({ target: target.name, theme, ...metrics });
 
@@ -68,16 +85,43 @@ try {
       if (theme === 'light') await page.screenshot({ path: `${output}-${target.name}-category.png`, fullPage: true });
 
       await page.goto(new URL('../', url).href, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.locator('.group-entry').first().scrollIntoViewIfNeeded();
       const homeMetrics = await page.evaluate(() => {
         const links = [...document.querySelectorAll('.group-recent a')];
+        const firstCard = document.querySelector('.group-entry');
+        const firstCardRect = firstCard?.getBoundingClientRect();
+        const artPointTarget = firstCardRect
+          ? document.elementFromPoint(firstCardRect.right - 32, firstCardRect.top + firstCardRect.height / 2)?.closest('.group-card-link')
+          : null;
         return {
           recentLinkCount: links.length,
           directArticleCount: links.filter((link) => !link.getAttribute('href')?.includes('/category/')).length,
-          groupLinkCount: document.querySelectorAll('.group-link, .group-enter').length,
+          groupCardLinkCount: document.querySelectorAll('.group-card-link').length,
+          groupHintCount: document.querySelectorAll('.group-enter').length,
+          cardArtPointClickable: Boolean(artPointTarget),
         };
       });
       if (homeMetrics.recentLinkCount < 2 || homeMetrics.directArticleCount !== homeMetrics.recentLinkCount) throw new Error(`${target.name}/${theme}: 首页近期文章未全部直达文章`);
-      if (homeMetrics.groupLinkCount !== 8) throw new Error(`${target.name}/${theme}: 首页分组入口数量错误`);
+      if (homeMetrics.groupCardLinkCount !== 4 || homeMetrics.groupHintCount !== 4) throw new Error(`${target.name}/${theme}: 首页整卡分组入口数量错误`);
+      if (target.name === 'desktop' && !homeMetrics.cardArtPointClickable) throw new Error(`${target.name}/${theme}: 分组图片与留白区域不可点击`);
+
+      if (target.name === 'desktop') {
+        await page.locator('.group-card-link').first().hover();
+        await page.waitForTimeout(220);
+        const cardHoverTransform = await page.locator('.group-entry').first().evaluate((node) => getComputedStyle(node).transform);
+        if (cardHoverTransform === 'none') throw new Error(`${target.name}/${theme}: 首页父分组卡缺少悬停反馈`);
+        await page.screenshot({ path: `${output}-${target.name}-${theme}-home-card-hover.png`, fullPage: true });
+
+        await page.locator('.group-recent a').first().hover();
+        await page.waitForTimeout(220);
+        const homeSeparatedFeedback = await page.locator('.group-recent a').first().evaluate((link) => ({
+          groupTransform: getComputedStyle(link.closest('.group-entry')).transform,
+          recentBackground: getComputedStyle(link).backgroundColor,
+        }));
+        if (homeSeparatedFeedback.groupTransform !== 'none') throw new Error(`${target.name}/${theme}: 首页文章悬停错误触发父卡位移`);
+        if (homeSeparatedFeedback.recentBackground === 'rgba(0, 0, 0, 0)') throw new Error(`${target.name}/${theme}: 首页文章缺少独立悬停反馈`);
+        await page.screenshot({ path: `${output}-${target.name}-${theme}-home-recent-hover.png`, fullPage: true });
+      }
       await context.close();
     }
   }

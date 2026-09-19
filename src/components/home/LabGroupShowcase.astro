@@ -76,12 +76,13 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
       <article
         class:list={['group-entry', `art-${group.side}`, group.artClass]}
       >
+        <a class="group-card-link" href={withBase(`/blog/category/${encodeURIComponent(group.name)}/`)} aria-label={`进入${group.name}分组`}></a>
         <div class="group-copy">
           <div class="group-title-line">
             <span>{group.index}</span>
             <p>{group.english}</p>
           </div>
-          <h3><a class="group-link" href={withBase(`/blog/category/${encodeURIComponent(group.name)}/`)}>{group.name}</a></h3>
+          <h3>{group.name}</h3>
           <div class="group-recent">
             <span class="group-recent-label">近期文章</span>
             {group.recentPosts.length > 0 ? (
@@ -99,7 +100,7 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
               <p class="group-empty">暂无文章，内容正在整理。</p>
             )}
           </div>
-          <a class="group-enter" href={withBase(`/blog/category/${encodeURIComponent(group.name)}/`)}>进入分组 <span aria-hidden="true">↗</span></a>
+          <span class="group-enter" aria-hidden="true">点击卡片进入分组 <span>↗</span></span>
         </div>
 
         {group.image && group.sources && (
@@ -203,12 +204,26 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
   .art-right::after { left: 0; }
   .art-left::after { right: 0; }
 
+  .group-card-link {
+    position: absolute;
+    z-index: 1;
+    inset: 20px 0;
+    border-radius: 18px;
+    cursor: pointer;
+  }
+
+  .group-card-link:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 4px;
+  }
+
   .group-copy {
     position: relative;
     z-index: 2;
     align-self: center;
     min-width: 0;
     padding: 48px 42px;
+    pointer-events: none;
   }
 
   .art-right .group-copy { grid-column: 1; }
@@ -242,14 +257,7 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
     letter-spacing: .03em;
   }
 
-  .group-link {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .group-link:focus-visible,
-  .group-recent a:focus-visible,
-  .group-enter:focus-visible {
+  .group-recent a:focus-visible {
     outline: 3px solid var(--focus);
     outline-offset: 3px;
     border-radius: 4px;
@@ -282,13 +290,26 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
   }
 
   .group-recent li a {
+    position: relative;
+    z-index: 3;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: baseline;
     gap: 18px;
+    margin-inline: -10px;
+    padding: 7px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
     color: var(--text-primary);
     font-size: 14px;
     text-decoration: none;
+    pointer-events: auto;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      color 150ms ease,
+      transform 140ms var(--ease-out);
   }
 
   .group-recent li a > span {
@@ -310,12 +331,16 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
 
   .group-enter {
     display: inline-flex;
+    align-items: center;
     gap: 6px;
     margin-top: 22px;
     color: var(--accent);
     font-size: 14px;
     font-weight: 750;
-    text-decoration: none;
+  }
+
+  .group-enter > span {
+    transition: transform 160ms var(--ease-out);
   }
 
   .group-art {
@@ -382,20 +407,30 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
     transform: translateY(-50%);
   }
 
-  .group-link:active,
-  .group-recent a:active,
-  .group-enter:active { transform: scale(.985); }
+  .group-recent a:active { transform: scale(.985); }
+
+  .group-entry:has(.group-card-link:active) {
+    transform: perspective(1100px) translateY(-1px) scale(.995);
+  }
 
   @media (hover: hover) and (pointer: fine) {
-    .group-entry:has(a:hover) { transform: translateY(-3px); }
-    .group-entry:has(a:hover)::before {
+    .group-entry:has(.group-card-link:hover) {
+      transform: perspective(1100px) translateY(-4px) rotateX(.45deg);
+    }
+    .group-entry:has(.group-card-link:hover)::before {
       border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
       box-shadow: 0 26px 56px color-mix(in srgb, var(--text-primary) 12%, transparent);
     }
-    .art-right:has(a:hover) .group-art img { transform: translateY(-52%) rotateY(-4deg) rotateX(1deg) translateZ(32px) scale(1.018); }
-    .art-left:has(a:hover) .group-art img { transform: translateY(-52%) rotateY(4deg) rotateX(1deg) translateZ(32px) scale(1.018); }
-    .group-recent a:hover,
-    .group-enter:hover { color: var(--accent); }
+    .art-right:has(.group-card-link:hover) .group-art img { transform: translateY(-52%) rotateY(-4deg) rotateX(1deg) translateZ(32px) scale(1.018); }
+    .art-left:has(.group-card-link:hover) .group-art img { transform: translateY(-52%) rotateY(4deg) rotateX(1deg) translateZ(32px) scale(1.018); }
+    .group-entry:has(.group-card-link:hover) .group-enter > span { transform: translate(2px, -2px); }
+    .group-recent a:hover {
+      border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+      background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+      box-shadow: 0 7px 18px color-mix(in srgb, var(--text-primary) 7%, transparent);
+      color: var(--accent);
+      transform: translateX(3px);
+    }
   }
 
   @media (max-width: 820px) {
@@ -419,6 +454,7 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
       flex-direction: column;
     }
     .group-entry::before { inset: 12px 0; border-radius: 15px; }
+    .group-card-link { inset: 12px 0; border-radius: 15px; }
     .group-entry::after { top: 34px; bottom: auto; height: 54px; }
     .group-copy,
     .art-left .group-copy,
@@ -451,9 +487,13 @@ if (cards.map(({ name }) => name).join('|') !== LAB_GROUPS.join('|')) {
   @media (prefers-reduced-motion: reduce) {
     .group-entry,
     .group-art img,
-    .group-entry::before { transition-duration: 0ms; }
-    .group-entry:has(a:hover) { transform: none; }
-    .art-right:has(a:hover) .group-art img { transform: translateY(-50%) rotateY(-7deg) rotateX(2deg) translateZ(22px); }
-    .art-left:has(a:hover) .group-art img { transform: translateY(-50%) rotateY(7deg) rotateX(2deg) translateZ(22px); }
+    .group-entry::before,
+    .group-recent a,
+    .group-enter > span { transition-duration: 0ms; }
+    .group-entry:has(.group-card-link:hover),
+    .group-entry:has(.group-card-link:active),
+    .group-recent a:hover { transform: none; }
+    .art-right:has(.group-card-link:hover) .group-art img { transform: translateY(-50%) rotateY(-7deg) rotateX(2deg) translateZ(22px); }
+    .art-left:has(.group-card-link:hover) .group-art img { transform: translateY(-50%) rotateY(7deg) rotateX(2deg) translateZ(22px); }
   }
 </style>
