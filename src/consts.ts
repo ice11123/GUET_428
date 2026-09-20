@@ -23,7 +23,7 @@ export const TARGET_REPOSITORY = 'ice11123/GUET_428';
 
 export const DIR1_ORDER: string[] = [...LAB_GROUPS];
 export const DIR2_ORDER: Record<string, string[]> = {
-  小车组: ['新生入门', 'TI小车实战'],
+  小车组: ['新生入门', 'TI小车实战', 'PID算法', 'RTOS-任务调度器', '灰度及循迹环PID', '滤波算法与陀螺仪驱动'],
 };
 
 export const VALID_THEMES = ['light', 'dark'] as const;

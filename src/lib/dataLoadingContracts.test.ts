@@ -82,7 +82,32 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
   assert.match(projectPosts[9], /初始化—启动—感知—决策—控制—观测—完成/);
 
   const constants = readSource('consts.ts');
-  assert.match(constants, /小车组: \['新生入门', 'TI小车实战'\]/);
+  assert.match(constants, /小车组: \['新生入门', 'TI小车实战', 'PID算法', 'RTOS-任务调度器', '灰度及循迹环PID', '滤波算法与陀螺仪驱动'\]/);
+});
+
+test('资料总结按四个二级目录发布并保留代码证据边界', () => {
+  const paths = [
+    'content/blog/小车组/PID算法/01-pid-algorithms.md',
+    'content/blog/小车组/RTOS-任务调度器/01-cooperative-scheduler.md',
+    'content/blog/小车组/灰度及循迹环PID/01-line-tracking-control.md',
+    'content/blog/小车组/滤波算法与陀螺仪驱动/01-filtering-and-imu-drivers.md',
+  ];
+  const posts = paths.map(readSource);
+
+  posts.forEach((post) => {
+    assert.match(post, /dir1: "小车组"/);
+    assert.match(post, /^## 本篇总结$/m);
+    assert.doesNotMatch(post, /^## (动手练习|读完后应该能回答|本篇验收清单)$/m);
+  });
+
+  assert.match(posts[0], /位置式 PID/);
+  assert.match(posts[0], /抗积分饱和/);
+  assert.match(posts[1], /任务名使用指针比较/);
+  assert.match(posts[1], /`MaxUsed` 没有保存最大值/);
+  assert.match(posts[2], /备用未调用/);
+  assert.match(posts[2], /失线逻辑互相抵消/);
+  assert.match(posts[3], /DMP 驱动文件被当前 `IMU\.c` 调用 \| 否/);
+  assert.match(posts[3], /BNO080 UART-RVC 初始化与中断链可达/);
 });
 
 test('PublicStatus 可见或手动触发，共享请求且初次不连续重试', () => {
