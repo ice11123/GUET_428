@@ -33,6 +33,9 @@ export default defineConfig({
     '/blog/小车组/新生入门/01-ti-car-start': `${redirectBasePath}/blog/小车组/ti小车实战/01-ti-car-start/`,
     '/blog/小车组/新生入门/02-system-architecture': `${redirectBasePath}/blog/小车组/ti小车实战/02-system-architecture/`,
     '/blog/小车组/新生入门/03-first-motor-run': `${redirectBasePath}/blog/小车组/ti小车实战/03-first-motor-run/`,
+    '/blog/小车组/pid算法/01-pid-algorithms': `${redirectBasePath}/blog/小车组/pid算法/01-positional-incremental-pid/`,
+    '/blog/小车组/灰度及循迹环pid/01-line-tracking-control': `${redirectBasePath}/blog/小车组/灰度及循迹环pid/01-eight-channel-tracker/`,
+    '/blog/小车组/滤波算法与陀螺仪驱动/01-filtering-and-imu-drivers': `${redirectBasePath}/blog/小车组/滤波算法与陀螺仪驱动/01-kalman-fusion-design/`,
   },
 
   integrations: [

@@ -85,12 +85,21 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
   assert.match(constants, /小车组: \['新生入门', 'TI小车实战', 'PID算法', 'RTOS-任务调度器', '灰度及循迹环PID', '滤波算法与陀螺仪驱动'\]/);
 });
 
-test('资料总结按四个二级目录发布并保留代码证据边界', () => {
+test('每份资料独立成文并保留代码证据边界', () => {
   const paths = [
-    'content/blog/小车组/PID算法/01-pid-algorithms.md',
+    'content/blog/小车组/PID算法/01-positional-incremental-pid.md',
+    'content/blog/小车组/PID算法/02-low-pass-incremental-speed-pid.md',
+    'content/blog/小车组/PID算法/03-feedforward-anti-windup-cascade-pid.md',
     'content/blog/小车组/RTOS-任务调度器/01-cooperative-scheduler.md',
-    'content/blog/小车组/灰度及循迹环PID/01-line-tracking-control.md',
-    'content/blog/小车组/滤波算法与陀螺仪驱动/01-filtering-and-imu-drivers.md',
+    'content/blog/小车组/灰度及循迹环PID/01-eight-channel-tracker.md',
+    'content/blog/小车组/灰度及循迹环PID/02-mspm0g35xx-line-tracking-project.md',
+    'content/blog/小车组/滤波算法与陀螺仪驱动/01-kalman-fusion-design.md',
+    'content/blog/小车组/滤波算法与陀螺仪驱动/02-two-state-kalman-filter.md',
+    'content/blog/小车组/滤波算法与陀螺仪驱动/03-mspm0-mpu6050-balance-control.md',
+    'content/blog/小车组/滤波算法与陀螺仪驱动/04-mpu6050-dmp-package.md',
+    'content/blog/小车组/滤波算法与陀螺仪驱动/05-jy901s-uart-driver.md',
+    'content/blog/小车组/滤波算法与陀螺仪驱动/06-bno080-uart-rvc-project.md',
+    'content/blog/小车组/滤波算法与陀螺仪驱动/07-bno080-datasheet-rvc.md',
   ];
   const posts = paths.map(readSource);
 
@@ -100,14 +109,26 @@ test('资料总结按四个二级目录发布并保留代码证据边界', () =>
     assert.doesNotMatch(post, /^## (动手练习|读完后应该能回答|本篇验收清单)$/m);
   });
 
-  assert.match(posts[0], /位置式 PID/);
-  assert.match(posts[0], /抗积分饱和/);
-  assert.match(posts[1], /任务名使用指针比较/);
-  assert.match(posts[1], /`MaxUsed` 没有保存最大值/);
-  assert.match(posts[2], /备用未调用/);
-  assert.match(posts[2], /失线逻辑互相抵消/);
-  assert.match(posts[3], /DMP 驱动文件被当前 `IMU\.c` 调用 \| 否/);
-  assert.match(posts[3], /BNO080 UART-RVC 初始化与中断链可达/);
+  assert.equal(paths.length, 13);
+  assert.match(posts[0], /`pid_set_target\(\)` 会重置历史状态/);
+  assert.match(posts[1], /航向差速代码仍被注释/);
+  assert.match(posts[2], /条件积分、积分限幅和饱和方向判断/);
+  assert.match(posts[3], /任务名使用指针比较/);
+  assert.match(posts[3], /`MaxUsed` 没有保存最大值/);
+  assert.match(posts[4], /备用未调用/);
+  assert.match(posts[5], /速度 PID 文件存在，但当前调用链仍被注释/);
+  assert.match(posts[6], /四状态模型/);
+  assert.match(posts[7], /固定 5 ms/);
+  assert.match(posts[8], /I²C 等待没有超时/);
+  assert.match(posts[9], /当前 `IMU\.c` 使用 DMP FIFO 输出 \| 否/);
+  assert.match(posts[10], /100 组独立同步样本 \| 否/);
+  assert.match(posts[11], /新数据标志被正确消费 \| 否/);
+  assert.match(posts[12], /RVC 帧固定为 19 字节/);
+
+  const astroConfig = readSource('../astro.config.mjs');
+  assert.match(astroConfig, /01-pid-algorithms.*01-positional-incremental-pid/);
+  assert.match(astroConfig, /01-line-tracking-control.*01-eight-channel-tracker/);
+  assert.match(astroConfig, /01-filtering-and-imu-drivers.*01-kalman-fusion-design/);
 });
 
 test('PublicStatus 可见或手动触发，共享请求且初次不连续重试', () => {
