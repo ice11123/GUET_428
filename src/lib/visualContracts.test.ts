@@ -68,11 +68,18 @@ test('高频导航即时可见且公共页面复用统一侧栏', () => {
 
 test('TOC、搜索与 Spoiler 使用新的交互契约', () => {
   const toc = readSource('scripts/toc.ts');
+  const tocStyles = readSource('styles/article-toc-sidebar.scss');
   assert.doesNotMatch(toc, /\.style\.height/);
   assert.match(toc, /scaleY\(\$\{length\}\)/);
+  assert.match(toc, /createElement\('button'\)/);
   assert.match(toc, /astro:before-swap', teardownToc/);
   assert.match(toc, /headingResizeObserver/);
-  assert.match(toc, /headingAbsBottoms/);
+  assert.match(toc, /findActiveHeadingIndex/);
+  assert.match(toc, /getHeadingScrollOffset/);
+  assert.match(toc, /document\.fonts\?\.ready/);
+  assert.match(toc, /window\.addEventListener\('resize', scheduleGeometryRefresh/);
+  assert.match(tocStyles, /\.position-indicator\s*\{[\s\S]*top:\s*0/);
+  assert.doesNotMatch(tocStyles, /\.position-indicator\s*\{[\s\S]*top:\s*78px/);
 
   const search = readSource('scripts/search.ts');
   const searchModal = readSource('components/blog/SearchModal.astro');
@@ -174,7 +181,8 @@ test('文章页使用紧凑导语、独立正文版心与可追溯作者', () =>
   assert.match(layout, /class="prose article-content"/);
   assert.match(layout, /查看源文件/);
   assert.match(constants, /PERSONAL_BLOG_URL\s*=\s*'https:\/\/ice11123\.github\.io\/blog_test2\/'/);
-  assert.match(styles, /\.article-header h1\s*\{[\s\S]*text-wrap:\s*balance/);
+  assert.match(styles, /\.article-header h1\s*\{[\s\S]*width:\s*100%[\s\S]*max-width:\s*none/);
+  assert.match(styles, /\.article-header h1\s*\{[\s\S]*text-align:\s*center[\s\S]*text-wrap:\s*pretty/);
   assert.match(styles, /\.post-author-link\s*\{[\s\S]*color:\s*#b4232c/);
   assert.match(styles, /\.blog-post-page \.prose\s*\{[\s\S]*font-size:\s*17px[\s\S]*line-height:\s*1\.86/);
 });

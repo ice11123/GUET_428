@@ -95,7 +95,7 @@ function initMobileSidebars() {
   }, { signal });
 
   rightDrawer?.addEventListener('click', (event) => {
-    if (media.matches && (event.target as Element).closest('#toc-list li > div')) close({ announce: false });
+    if (media.matches && (event.target as Element).closest('#toc-list button')) close({ announce: false });
   }, { signal });
 
   const resizeObserver = new ResizeObserver(updateHeaderHeight);
