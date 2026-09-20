@@ -85,7 +85,7 @@ test('小车组新生入门与 TI 小车实战各自保持清晰定位', () => {
   assert.match(constants, /小车组: \['新生入门', 'TI小车实战', 'PID算法', 'RTOS-任务调度器', '灰度及循迹环PID', '滤波算法与陀螺仪驱动'\]/);
 });
 
-test('每份资料独立成文并保留代码证据边界', () => {
+test('每篇嵌入式专题独立成文并保留关键工程结论', () => {
   const paths = [
     'content/blog/小车组/PID算法/01-positional-incremental-pid.md',
     'content/blog/小车组/PID算法/02-low-pass-incremental-speed-pid.md',
@@ -120,10 +120,10 @@ test('每份资料独立成文并保留代码证据边界', () => {
   assert.match(posts[6], /四状态模型/);
   assert.match(posts[7], /固定 5 ms/);
   assert.match(posts[8], /I²C 等待没有超时/);
-  assert.match(posts[9], /当前 `IMU\.c` 使用 DMP FIFO 输出 \| 否/);
-  assert.match(posts[10], /100 组独立同步样本 \| 否/);
-  assert.match(posts[11], /新数据标志被正确消费 \| 否/);
-  assert.match(posts[12], /RVC 帧固定为 19 字节/);
+  assert.match(posts[9], /DMP 路径 \| 有上游源码，但 `IMU\.c` 未调用 `dmp_read_fifo\(\)`/);
+  assert.match(posts[10], /自动校准 \| 旧样本可能被重复累计/);
+  assert.match(posts[11], /新数据消费 \| 当前只清除了本地副本标志/);
+  assert.match(posts[12], /帧结构 \| 固定 19 字节/);
 
   const astroConfig = readSource('../astro.config.mjs');
   assert.match(astroConfig, /01-pid-algorithms.*01-positional-incremental-pid/);
