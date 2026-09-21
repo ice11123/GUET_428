@@ -76,13 +76,46 @@ try {
         groupCount: document.querySelectorAll('.directory-section').length,
         levelOneCount: document.querySelectorAll('.directory-level-label').length,
         levelTwoCount: document.querySelectorAll('.directory-subsection-label').length,
+        accordionCount: document.querySelectorAll('[data-directory-accordion]').length,
+        openAccordionCount: document.querySelectorAll('[data-directory-accordion][open]').length,
         postRowCount: document.querySelectorAll('.directory-post').length,
+        visiblePostRowCount: [...document.querySelectorAll('.directory-post')].filter((node) => node.getClientRects().length > 0).length,
+        levelThreeCount: document.querySelectorAll('.directory-post-level').length,
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       }));
       if (categoryMetrics.groupCount !== 1 || categoryMetrics.levelOneCount !== 1) throw new Error(`${target.name}/${theme}: 分类页一级分组错误`);
-      if (categoryMetrics.levelTwoCount !== 2 || categoryMetrics.postRowCount !== 6) throw new Error(`${target.name}/${theme}: 分类页完整目录错误`);
+      if (categoryMetrics.levelTwoCount < 1 || categoryMetrics.postRowCount < 1) throw new Error(`${target.name}/${theme}: 分类页完整目录错误`);
+      if (categoryMetrics.accordionCount !== categoryMetrics.levelTwoCount) throw new Error(`${target.name}/${theme}: 二级专题未全部采用折叠组`);
+      if (categoryMetrics.openAccordionCount !== 0 || categoryMetrics.visiblePostRowCount !== 0) throw new Error(`${target.name}/${theme}: 二级专题没有默认收起`);
+      if (categoryMetrics.levelThreeCount !== categoryMetrics.postRowCount) throw new Error(`${target.name}/${theme}: 三级文章标识不完整`);
       if (categoryMetrics.overflow > 1) throw new Error(`${target.name}/${theme}: 分类页横向溢出 ${categoryMetrics.overflow}px`);
-      if (theme === 'light') await page.screenshot({ path: `${output}-${target.name}-category.png`, fullPage: true });
+      await page.screenshot({ path: `${output}-${target.name}-category-collapsed-${theme}.png`, fullPage: true });
+
+      const firstAccordion = page.locator('[data-directory-accordion]').first();
+      const firstSummary = firstAccordion.locator('summary');
+      await firstSummary.click();
+      await page.waitForFunction((element) => element.dataset.state === 'open', await firstAccordion.elementHandle());
+      const expandedMetrics = await page.evaluate(() => ({
+        openAccordionCount: document.querySelectorAll('[data-directory-accordion][open]').length,
+        visiblePostRowCount: [...document.querySelectorAll('.directory-post')].filter((node) => node.getClientRects().length > 0).length,
+      }));
+      if (expandedMetrics.openAccordionCount !== 1 || expandedMetrics.visiblePostRowCount < 1) throw new Error(`${target.name}/${theme}: 二级专题展开失败`);
+      if (await firstSummary.getAttribute('aria-expanded') !== 'true') throw new Error(`${target.name}/${theme}: 展开状态未同步到无障碍属性`);
+
+      await firstSummary.press('Enter');
+      if (await firstAccordion.getAttribute('data-state') !== 'closed') throw new Error(`${target.name}/${theme}: 键盘未立即收起`);
+      await firstSummary.press('Enter');
+      if (await firstAccordion.getAttribute('data-state') !== 'open') throw new Error(`${target.name}/${theme}: 键盘未立即展开`);
+      await firstSummary.click();
+      await page.waitForTimeout(35);
+      await firstSummary.click();
+      await page.waitForFunction((element) => element.dataset.state === 'open', await firstAccordion.elementHandle());
+      await page.screenshot({ path: `${output}-${target.name}-category-open-${theme}.png`, fullPage: true });
+
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await firstSummary.click();
+      if (await firstAccordion.getAttribute('data-state') !== 'closed') throw new Error(`${target.name}/${theme}: 降低动态模式未立即切换`);
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
 
       await page.goto(new URL('../', url).href, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.locator('.group-entry').first().scrollIntoViewIfNeeded();

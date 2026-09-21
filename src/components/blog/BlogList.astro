@@ -76,17 +76,32 @@ if (sort === 'dir' || sort === 'overview') {
   .directory-section[data-group='other'] { --directory-accent: var(--accent-tertiary); }
   :global([data-theme='dark']) .directory-section[data-group='flight'] { --directory-accent: #8fc9f4; }
   :global([data-theme='dark']) .directory-section[data-group='car'] { --directory-accent: #81cdbb; }
-  .directory-subsection + .directory-subsection { border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent); }
-  .directory-subsection-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.72rem 1.5rem; border-bottom: 1px solid color-mix(in srgb, var(--directory-accent) 16%, var(--border)); background: color-mix(in srgb, var(--directory-accent) 5%, var(--surface)); }
-  .directory-subsection-title { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
-  .directory-branch-mark { position: relative; display: block; flex: none; width: 1.45rem; height: 1.45rem; border: 1px solid color-mix(in srgb, var(--directory-accent) 32%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--directory-accent) 9%, transparent); }
-  .directory-branch-mark::before, .directory-branch-mark::after { position: absolute; background: var(--directory-accent); content: ''; opacity: 0.8; }
-  .directory-branch-mark::before { top: 0.34rem; left: 0.43rem; width: 1px; height: 0.68rem; }
-  .directory-branch-mark::after { top: 0.72rem; left: 0.43rem; width: 0.52rem; height: 1px; }
-  .directory-subsection-label { margin: 0 0 0.08rem; color: var(--directory-accent); font-size: 0.58rem; font-weight: 780; letter-spacing: 0.1em; line-height: 1.15; }
-  .directory-subsection h3 { margin: 0; color: var(--text-primary); font-size: 0.88rem; font-weight: 720; }
-  .directory-subsection-count { flex: none; color: var(--text-secondary); font-size: 0.7rem; white-space: nowrap; }
-  .directory-post-list { margin: 0; padding: 0; list-style: none; }
+  .directory-subsection-stack { display: grid; gap: 0.85rem; padding: 1rem 1.2rem 1.25rem; background: linear-gradient(180deg, color-mix(in srgb, var(--directory-accent) 4%, transparent), transparent 7rem), color-mix(in srgb, var(--surface) 96%, var(--bg)); }
+  .directory-subsection { overflow: clip; border: 1px solid color-mix(in srgb, var(--directory-accent) 22%, var(--border)); border-radius: 15px; background: color-mix(in srgb, var(--surface) 97%, var(--directory-accent) 3%); box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 4%, transparent); }
+  .directory-subsection > summary { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; align-items: center; gap: 0.85rem; min-height: 4.6rem; padding: 0.82rem 1rem; cursor: pointer; list-style: none; background: linear-gradient(90deg, color-mix(in srgb, var(--directory-accent) 7%, transparent), transparent 58%); transition: background-color 150ms ease, color 150ms ease, transform 120ms var(--ease-out); }
+  .directory-subsection > summary::-webkit-details-marker { display: none; }
+  .directory-subsection > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: -4px; }
+  .directory-subsection > summary:active { transform: scale(.998); }
+  .directory-subsection-order { position: relative; display: grid; width: 2.65rem; height: 2.45rem; place-items: center; border: 1px solid color-mix(in srgb, var(--directory-accent) 36%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--directory-accent) 9%, var(--surface)); color: var(--directory-accent); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.66rem; font-weight: 760; letter-spacing: 0.03em; }
+  .directory-subsection-order::before { position: absolute; top: -1px; right: 0.45rem; left: 0.45rem; height: 2px; border-radius: 999px; background: var(--directory-accent); content: ''; opacity: .72; }
+  .directory-subsection-title { display: block; min-width: 0; }
+  .directory-subsection-label { display: block; margin: 0 0 0.18rem; color: var(--directory-accent); font-size: 0.58rem; font-weight: 780; letter-spacing: 0.13em; line-height: 1.15; }
+  .directory-subsection-name { display: block; overflow: hidden; color: var(--text-primary); font-size: clamp(.94rem, 1.6vw, 1.06rem); font-weight: 740; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+  .directory-subsection-count { padding: 0.31rem 0.55rem; border: 1px solid color-mix(in srgb, var(--directory-accent) 24%, var(--border)); border-radius: 999px; color: var(--text-secondary); font-size: 0.7rem; white-space: nowrap; }
+  .directory-subsection-action { color: var(--directory-accent); font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+  .directory-action-close, .directory-subsection[data-state='opening'] .directory-action-open, .directory-subsection[data-state='open'] .directory-action-open { display: none; }
+  .directory-subsection[data-state='opening'] .directory-action-close, .directory-subsection[data-state='open'] .directory-action-close { display: inline; }
+  .directory-subsection-chevron { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid color-mix(in srgb, var(--directory-accent) 30%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--directory-accent) 7%, transparent); color: var(--directory-accent); transition: background-color 160ms ease, color 160ms ease, transform 200ms var(--ease-out); }
+  .directory-subsection-chevron svg { width: .9rem; height: .9rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+  .directory-subsection[data-state='opening'] .directory-subsection-chevron, .directory-subsection[data-state='open'] .directory-subsection-chevron { background: var(--directory-accent); color: var(--surface); transform: rotate(180deg); }
+  .directory-subsection-panel { opacity: 1; }
+  .directory-subsection:not([open]) > .directory-subsection-panel { display: none; }
+  .directory-subsection-panel-inner { padding: .78rem; border-top: 1px solid color-mix(in srgb, var(--directory-accent) 19%, var(--border)); background: color-mix(in srgb, var(--directory-accent) 2.5%, var(--bg)); opacity: 1; transform: translateY(0); transition: opacity 170ms var(--ease-out), transform 200ms var(--ease-out); }
+  .directory-subsection[data-state='closed'] .directory-subsection-panel-inner, .directory-subsection[data-state='closing'] .directory-subsection-panel-inner { opacity: 0; transform: translateY(-6px); }
+  .directory-third-level-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .15rem .2rem .65rem; color: var(--text-secondary); font-size: .66rem; }
+  .directory-third-level-heading strong { display: inline-flex; align-items: center; gap: .42rem; color: var(--directory-accent); font-size: .68rem; letter-spacing: .1em; }
+  .directory-third-level-heading strong::before { width: 1.3rem; height: 2px; border-radius: 999px; background: var(--directory-accent); content: ''; }
+  .directory-post-list { display: grid; gap: .6rem; margin: 0; padding: 0; list-style: none; }
   .directory-overview-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.62rem 1.5rem; border-bottom: 1px solid color-mix(in srgb, var(--directory-accent) 14%, var(--border)); background: color-mix(in srgb, var(--directory-accent) 4%, var(--surface)); }
   .directory-overview-heading p { margin: 0; color: var(--directory-accent); font-size: 0.66rem; font-weight: 760; letter-spacing: 0.1em; }
   .directory-overview-heading a { color: var(--directory-accent); font-size: 0.72rem; font-weight: 700; text-decoration: none; }
@@ -100,9 +115,12 @@ if (sort === 'dir' || sort === 'overview') {
       box-shadow: 0 25px 58px color-mix(in srgb, var(--text-primary) 12%, transparent);
       transform: perspective(1100px) translateY(-4px) rotateX(.4deg);
     }
+    .directory-subsection > summary:hover { background-color: color-mix(in srgb, var(--directory-accent) 7%, transparent); }
+    .directory-subsection > summary:hover .directory-subsection-chevron { border-color: var(--directory-accent); transform: translateY(-1px); }
+    .directory-subsection[data-state='opening'] > summary:hover .directory-subsection-chevron, .directory-subsection[data-state='open'] > summary:hover .directory-subsection-chevron { transform: translateY(-1px) rotate(180deg); }
   }
-  @media (max-width: 680px) { .directory-groups { gap: 1rem; margin-top: 1.2rem; } .directory-section { border-radius: 16px; } .directory-subsection-header, .directory-overview-heading { padding: 0.68rem 1rem; } .directory-empty { padding: 1rem; } }
-  @media (prefers-reduced-motion: reduce) { .directory-section { transition-duration: 0ms; } .directory-section:has(.directory-group-link:hover), .directory-section:has(.directory-group-link:active) { transform: none; } }
+  @media (max-width: 680px) { .directory-groups { gap: 1rem; margin-top: 1.2rem; } .directory-section { border-radius: 16px; } .directory-overview-heading { padding: .68rem 1rem; } .directory-empty { padding: 1rem; } .directory-subsection-stack { gap: .65rem; padding: .75rem; } .directory-subsection > summary { grid-template-columns: auto minmax(0, 1fr) auto; gap: .65rem; min-height: 4.2rem; padding: .72rem; } .directory-subsection-order { width: 2.25rem; height: 2.25rem; } .directory-subsection-action { display: none; } .directory-subsection-count { position: absolute; right: 3.35rem; align-self: end; padding: 0; border: 0; font-size: .62rem; transform: translateY(-.34rem); } .directory-subsection-panel-inner { padding: .62rem; } .directory-third-level-heading > span:last-child { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .directory-section { transition-duration: 0ms; } .directory-section:has(.directory-group-link:hover), .directory-section:has(.directory-group-link:active) { transform: none; } .directory-subsection > summary, .directory-subsection-chevron, .directory-subsection-panel-inner { transition: none; } .directory-subsection[data-state='closed'] .directory-subsection-panel-inner, .directory-subsection[data-state='closing'] .directory-subsection-panel-inner { transform: none; } }
 </style>
 
 <main class="blog-list">
@@ -138,21 +156,48 @@ if (sort === 'dir' || sort === 'overview') {
             <DirectoryGroupHeader id={`directory-group-${index}`} title={dir1} count={count} index={presentation.order} variant={presentation.variant} image={presentation.image} />
             {dir2List.length === 0 ? (
               <p class="directory-empty">该分组暂无文章，内容将在后续更新。</p>
-            ) : dir2List.map(([dir2, list]) => (
-              <section class="directory-subsection" aria-label={dir2 || `${dir1}未归入专题的文章`}>
-                <header class="directory-subsection-header">
-                  <div class="directory-subsection-title">
-                    <span class="directory-branch-mark" aria-hidden="true"></span>
-                    <div><p class="directory-subsection-label">二级专题</p><h3>{dir2 || '未归入专题'}</h3></div>
-                  </div>
-                  <span class="directory-subsection-count">{list.length} 篇</span>
-                </header>
-                <ul class="directory-post-list">{list.map((post, postIndex) => <DirectoryPostRow post={post} index={postIndex} />)}</ul>
-              </section>
-            ))}
+            ) : (
+              <div class="directory-subsection-stack">
+                {dir2List.map(([dir2, list], dir2Index) => {
+                  const subsectionOrder = `02.${String(dir2Index + 1).padStart(2, '0')}`;
+                  const panelId = `directory-panel-${index}-${dir2Index}`;
+                  const title = dir2 || '未归入专题';
+                  return (
+                    <details class="directory-subsection" data-directory-accordion data-state="closed">
+                      <summary aria-controls={panelId} aria-expanded="false">
+                        <span class="directory-subsection-order" aria-hidden="true">{subsectionOrder}</span>
+                        <span class="directory-subsection-title">
+                          <span class="directory-subsection-label">二级专题</span>
+                          <span class="directory-subsection-name">{title}</span>
+                        </span>
+                        <span class="directory-subsection-count">{list.length} 篇</span>
+                        <span class="directory-subsection-action" aria-hidden="true">
+                          <span class="directory-action-open">展开文章</span>
+                          <span class="directory-action-close">收起文章</span>
+                        </span>
+                        <span class="directory-subsection-chevron" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="m5 8 5 5 5-5" /></svg></span>
+                      </summary>
+                      <div class="directory-subsection-panel" id={panelId} data-directory-panel role="region" aria-label={`${title}文章`}>
+                        <div class="directory-subsection-panel-inner">
+                          <div class="directory-third-level-heading"><strong>三级文章</strong><span>按学习顺序排列 · 点击标题进入正文</span></div>
+                          <ol class="directory-post-list">{list.map((post, postIndex) => <DirectoryPostRow post={post} index={postIndex} />)}</ol>
+                        </div>
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            )}
           </section>
         );
       })}
     </div>
   )}
 </main>
+
+<script>
+  import { initializeDirectoryAccordions } from '../../scripts/directory-accordion';
+
+  initializeDirectoryAccordions();
+  document.addEventListener('astro:page-load', () => initializeDirectoryAccordions());
+</script>

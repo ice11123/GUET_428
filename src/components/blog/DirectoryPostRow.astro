@@ -14,6 +14,7 @@ const description = post.data.description.replace(/<[^>]+>/g, '').trim();
   <a class="directory-post-link" href={blogPostPath(post.id)}>
     <span class="directory-post-order" aria-hidden="true">{order}</span>
     <div class="directory-post-copy">
+      <span class="directory-post-level">三级文章 · {order}</span>
       <h4>{post.data.title}</h4><p>{description}</p>
       <div class="directory-post-meta">
         <time><FormattedDate date={post.data.pubDate} /></time>
@@ -27,11 +28,11 @@ const description = post.data.description.replace(/<[^>]+>/g, '').trim();
   </a>
 </li>
 <style>
-  .directory-post { margin: 0; padding: 0; list-style: none; }
-  .directory-post + .directory-post { border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent); }
-  .directory-post-link { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr) auto; align-items: center; gap: 1.1rem; min-width: 0; padding: 1.08rem 1.5rem; color: inherit; text-decoration: none; transition: background-color 160ms var(--ease-out), transform 120ms var(--ease-out); }
-  .directory-post-order { align-self: start; padding-top: 0.14rem; color: var(--directory-accent); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.68rem; font-weight: 750; letter-spacing: 0.06em; opacity: 0.82; }
+  .directory-post { margin: 0; padding: 0; overflow: clip; border: 1px solid color-mix(in srgb, var(--directory-accent) 15%, var(--border)); border-radius: 11px; background: color-mix(in srgb, var(--surface) 96%, var(--directory-accent) 4%); list-style: none; }
+  .directory-post-link { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr) auto; align-items: center; gap: 1.1rem; min-width: 0; padding: 1.05rem 1.25rem; color: inherit; text-decoration: none; transition: background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out), transform 120ms var(--ease-out); }
+  .directory-post-order { display: grid; align-self: start; width: 2rem; height: 2rem; place-items: center; border: 1px solid color-mix(in srgb, var(--directory-accent) 26%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--directory-accent) 8%, transparent); color: var(--directory-accent); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.66rem; font-weight: 750; letter-spacing: 0.06em; opacity: 0.84; }
   .directory-post-copy { min-width: 0; }
+  .directory-post-level { display: block; margin: 0 0 .22rem; color: var(--directory-accent); font-size: .57rem; font-weight: 760; letter-spacing: .09em; line-height: 1.2; }
   .directory-post h4 { margin: 0; color: var(--text-primary); font-size: 1rem; font-weight: 700; line-height: 1.45; text-wrap: pretty; }
   .directory-post p { display: -webkit-box; margin: 0.38rem 0 0; overflow: hidden; color: var(--text-secondary); font-size: 0.82rem; line-height: 1.55; text-overflow: ellipsis; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
   .directory-post-meta { display: flex; align-items: center; gap: 0.7rem; min-width: 0; margin-top: 0.65rem; color: var(--text-secondary); font-size: 0.7rem; }
@@ -41,7 +42,7 @@ const description = post.data.description.replace(/<[^>]+>/g, '').trim();
   .directory-post-tag-more { flex: none; color: var(--text-secondary); }
   .directory-post-arrow { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid color-mix(in srgb, var(--border) 82%, transparent); border-radius: 50%; color: var(--directory-accent); transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out); }
   .directory-post-link:active { transform: scale(0.995); }
-  @media (hover: hover) and (pointer: fine) { .directory-post-link:hover { background: color-mix(in srgb, var(--directory-accent) 5%, transparent); } .directory-post-link:hover .directory-post-arrow { border-color: var(--directory-accent); background: var(--directory-accent); color: var(--surface); transform: translateX(3px); } }
-  @media (max-width: 680px) { .directory-post-link { grid-template-columns: 1.55rem minmax(0, 1fr) auto; gap: 0.5rem; padding: 0.95rem 1rem; } .directory-post p { -webkit-line-clamp: 2; } .directory-post-meta { align-items: flex-start; flex-direction: column; gap: 0.45rem; } .directory-post-arrow { width: 1.75rem; height: 1.75rem; } }
-  @media (prefers-reduced-motion: reduce) { .directory-post-link, .directory-post-arrow { transition: none; } .directory-post-link:active, .directory-post-link:hover .directory-post-arrow { transform: none; } }
+  @media (hover: hover) and (pointer: fine) { .directory-post-link:hover { background: color-mix(in srgb, var(--directory-accent) 6%, transparent); box-shadow: 0 8px 20px color-mix(in srgb, var(--text-primary) 5%, transparent); transform: translateY(-1px); } .directory-post-link:hover .directory-post-arrow { border-color: var(--directory-accent); background: var(--directory-accent); color: var(--surface); transform: translateX(3px); } }
+  @media (max-width: 680px) { .directory-post-link { grid-template-columns: 1.6rem minmax(0, 1fr) auto; gap: .55rem; padding: .95rem; } .directory-post p { -webkit-line-clamp: 2; } .directory-post-meta { align-items: flex-start; flex-direction: column; gap: .45rem; } .directory-post-arrow { width: 1.75rem; height: 1.75rem; } .directory-post-order { width: 1.6rem; height: 1.6rem; font-size: .6rem; } }
+  @media (prefers-reduced-motion: reduce) { .directory-post-link, .directory-post-arrow { transition: none; } .directory-post-link:active, .directory-post-link:hover, .directory-post-link:hover .directory-post-arrow { transform: none; } }
 </style>

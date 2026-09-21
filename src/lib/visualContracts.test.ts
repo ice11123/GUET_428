@@ -503,6 +503,8 @@ test('文章目录使用真实内容统计并明确区分一级分组与二级�
   const page = readSource('pages/blog/index.astro');
   const list = readSource('components/blog/BlogList.astro');
   const groupHeader = readSource('components/blog/DirectoryGroupHeader.astro');
+  const postRow = readSource('components/blog/DirectoryPostRow.astro');
+  const accordion = readSource('scripts/directory-accordion.ts');
 
   assert.match(page, /const posts = await getCollection\('blog'\)/);
   assert.match(page, /SITE_START_DATE/);
@@ -511,6 +513,14 @@ test('文章目录使用真实内容统计并明确区分一级分组与二级�
   assert.doesNotMatch(page, /new Date\(\)/);
   assert.match(groupHeader, /一级分组/);
   assert.match(list, /二级专题/);
+  assert.match(list, /<details class="directory-subsection" data-directory-accordion data-state="closed">/);
+  assert.match(list, /class="directory-third-level-heading"/);
+  assert.match(list, /<ol class="directory-post-list">/);
+  assert.match(postRow, /class="directory-post-level">三级文章/);
+  assert.match(accordion, /event\.detail === 0 \|\| reduceMotion\.matches/);
+  assert.match(accordion, /duration = Math\.round\(Math\.max\(90, fullDuration \* distanceRatio\)\)/);
+  assert.match(accordion, /cubic-bezier\(0\.23, 1, 0\.32, 1\)/);
+  assert.doesNotMatch(list, /max-height/);
   assert.match(list, /未归入专题/);
   assert.match(list, /该分组暂无文章，内容将在后续更新/);
   assert.match(list, /sort === 'time' \|\| sort === 'oldest'/);
