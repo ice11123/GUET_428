@@ -50,3 +50,12 @@ test('标签目录按文章数倒序并对同数量标签稳定排序', () => {
     { name: '前端', count: 1 },
   ]);
 });
+
+test('目录编号优先且未编号文章仍旧文在前、新文在后', () => {
+  const sequence: SidebarPost[] = [
+    { ...posts[0], title: '02｜第二篇', slug: '02-second', pubDate: new Date('2026-08-01') },
+    { ...posts[0], title: '01｜第一篇', slug: '01-first', pubDate: new Date('2026-08-03') },
+  ];
+  assert.deepEqual(buildArticleDirectory(sequence)[0].subdirectories[0].posts.map(post => post.slug), ['01-first', '02-second']);
+  assert.deepEqual(buildArticleDirectory(posts)[0].subdirectories[0].posts.map(post => post.slug), ['b', 'a']);
+});

@@ -1,4 +1,8 @@
+import { createHomeCoverImages } from '../lib/homeCoverImages';
+import { createHomeCoverTimeline, type HomeCoverMotionBlueprint } from '../lib/homeCoverTimeline';
 import {
+  createHomeCoverWheelTrigger,
+  HOME_COVER_WHEEL_IDLE_MS,
   normalizeHomeCoverWheelIntent,
   resolveHomeCoverDirection,
   resolveHomeCoverProgress,
@@ -9,7 +13,6 @@ import {
 } from '../lib/homeCoverGesture';
 import {
   computeHomeCoverMotionGeometry,
-  type HomeCoverMotionGeometry,
   type MotionRect,
 } from '../lib/homeCoverMotionGeometry';
 
@@ -25,38 +28,9 @@ const LOWER_SELECTOR = '[data-home-lower-motion]';
 const SIDEBAR_SELECTOR = '[data-persistent-sidebar]';
 const STATUS_SELECTOR = '[data-home-cover-status]';
 const HEADER_SELECTOR = '#site-header';
-const TIMELINE_DURATION = 1000;
-const WHEEL_GESTURE_IDLE_MS = 120;
 const TOGGLE_EXPAND_MS = 280;
 const TOGGLE_COLLAPSE_MS = 240;
-const DRAWER_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)';
-
-function cubicBezierCoordinate(t: number, first: number, second: number): number {
-  const inverse = 1 - t;
-  return 3 * inverse * inverse * t * first + 3 * inverse * t * t * second + t * t * t;
-}
-
-function cubicBezierDerivative(t: number, first: number, second: number): number {
-  const inverse = 1 - t;
-  return 3 * inverse * inverse * first + 6 * inverse * t * (second - first) + 3 * t * t * (1 - second);
-}
-
-function easeHomeCoverSettle(linearProgress: number): number {
-  const x = Math.min(Math.max(linearProgress, 0), 1);
-  let parameter = x;
-  for (let iteration = 0; iteration < 6; iteration += 1) {
-    const derivative = cubicBezierDerivative(parameter, 0.32, 0);
-    if (Math.abs(derivative) < 0.000001) break;
-    parameter -= (cubicBezierCoordinate(parameter, 0.32, 0) - x) / derivative;
-    parameter = Math.min(Math.max(parameter, 0), 1);
-  }
-  return cubicBezierCoordinate(parameter, 0.72, 1);
-}
-
-function interpolate(start: number, end: number, progress: number): number {
-  return start + (end - start) * progress;
-}
-
+const KEYBOARD_REVEAL_KEYS = new Set(['Tab', 'End', 'PageDown', 'ArrowDown', ' ']);
 function parseObjectPosition(value: string): [number, number] {
   const positions = value.trim().split(/\s+/);
   const parse = (position: string | undefined, fallback: number) => {
@@ -71,16 +45,6 @@ function parseObjectPosition(value: string): [number, number] {
 }
 
 type HomeCoverState = 'collapsed' | 'dragging' | 'settling' | 'expanded';
-type MotionTrack = {
-  element: HTMLElement | SVGElement;
-  frameAt: (progress: number) => Keyframe;
-};
-type MotionBlueprint = {
-  geometry: HomeCoverMotionGeometry;
-  imageWidth: number;
-  imageHeight: number;
-};
-
 let cleanupCurrentHero: (() => void) | undefined;
 
 function initHomeHeroMotion() {
@@ -104,24 +68,15 @@ function initHomeHeroMotion() {
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const desktopWheel = window.matchMedia('(hover: hover) and (pointer: fine)');
-  const dragAnimations: Animation[] = [];
-  const settleAnimations: Animation[] = [];
-  const motionTracks: MotionTrack[] = [];
+  const timeline = createHomeCoverTimeline({ stage, viewport, fullImage, drawer, toggle });
   const trackedPenPointers = new Set<number>();
   let state: HomeCoverState = 'collapsed';
   let progress = 0;
   let requestedTarget: 0 | 1 = 0;
   let settleSequence = 0;
-  let settleStartProgress = 0;
-  let settleTarget: 0 | 1 = 0;
-  let settleDuration = 0;
   let stableCleanupTimer: number | undefined;
-  let highResolutionRequested = false;
-  let highResolutionLoader: HTMLImageElement | undefined;
-  let pendingHighResolutionSource = '';
   let coverIsVisible = false;
   let measuredHeaderHeight = 1;
-  let activeHeroTheme: 'light' | 'dark' | undefined;
   let suppressClickUntil = 0;
   let gestureTravelDistance = 180;
 
@@ -135,20 +90,16 @@ function initHomeHeroMotion() {
   let gestureEngaged = false;
   let gestureCancelled = false;
 
-  let wheelIntentDistance = 0;
-  let wheelStartProgress = 0;
-  let wheelStartTime = 0;
-  let lastWheelTime = 0;
-  let wheelResetTimer: number | undefined;
+  const wheelTrigger = createHomeCoverWheelTrigger();
   let wheelBoundaryTimer: number | undefined;
   let wheelRequiresFreshInput = false;
-  let wheelTravelDistance = 280;
-  let cachedMotionBlueprint: MotionBlueprint | undefined;
+  let cachedMotionBlueprint: HomeCoverMotionBlueprint | undefined;
   let measuredStageRect: MotionRect | undefined;
   let layoutUpdateFrame: number | undefined;
   let geometryMeasureFrame: number | undefined;
   let progressFrame: number | undefined;
   let wheelListening = false;
+  const motionCullCandidates = [...drawer.querySelectorAll<HTMLElement>('[data-home-motion-cull]')];
 
   const documentElement = document.documentElement;
   const previousOverscrollBehavior = documentElement.style.overscrollBehaviorY;
@@ -185,11 +136,10 @@ function initHomeHeroMotion() {
       height: stageHeight,
     };
     gestureTravelDistance = Math.min(Math.max(stageHeight * 0.3, 160), 280);
-    wheelTravelDistance = Math.min(Math.max(stageHeight * 0.45, 240), 420);
     cachedMotionBlueprint = undefined;
   };
 
-  const measureMotionBlueprint = (): MotionBlueprint => {
+  const measureMotionBlueprint = (): HomeCoverMotionBlueprint => {
     const sourceRect = source.getBoundingClientRect();
     // 舞台在稳定收起态本身带有 FLIP transform；读取它的视觉矩形会把
     // 已缩放后的边界误当成下一轮布局边界。这里始终使用 resize 阶段缓存的
@@ -228,164 +178,61 @@ function initHomeHeroMotion() {
     drawer.dataset.wavesVisible = String(shouldRun);
   };
 
-  const commitHighResolution = () => {
-    if (!pendingHighResolutionSource || state !== 'expanded') return;
-    fullImage.removeAttribute('srcset');
-    fullImage.src = pendingHighResolutionSource;
-    pendingHighResolutionSource = '';
+  const restoreDrawerContent = () => {
+    for (const element of motionCullCandidates) delete element.dataset.homeMotionOffscreen;
   };
 
-  const cancelHighResolutionRequest = () => {
-    if (highResolutionLoader) {
-      highResolutionLoader.removeAttribute('srcset');
-      highResolutionLoader.removeAttribute('src');
-    }
-    highResolutionLoader = undefined;
-    pendingHighResolutionSource = '';
-  };
-
-  const requestHighResolution = () => {
-    if (highResolutionRequested) return;
-    const src = fullImage.dataset.fullSrc;
-    if (!src) return;
-    highResolutionRequested = true;
-    const loader = new Image();
-    highResolutionLoader = loader;
-    loader.decoding = 'async';
-    if (fullImage.dataset.fullSrcset) loader.srcset = fullImage.dataset.fullSrcset;
-    loader.sizes = fullImage.dataset.fullSizes || '100vw';
-    loader.src = src;
-    void loader.decode().then(() => {
-      if (highResolutionLoader !== loader || !document.contains(fullImage)) return;
-      pendingHighResolutionSource = loader.currentSrc || src;
-      commitHighResolution();
-    }).catch(() => {});
-  };
-
-  const reuseDecodedHero = () => {
-    const src = heroImage.currentSrc || heroImage.src;
-    if (!src) return;
-    fullImage.removeAttribute('srcset');
-    fullImage.src = src;
-  };
-
-  const releaseHighResolution = () => {
-    cancelHighResolutionRequest();
-    highResolutionRequested = false;
-    reuseDecodedHero();
-  };
-
-  const syncHeroTheme = () => {
-    const theme = documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-    if (theme === activeHeroTheme) return;
-    activeHeroTheme = theme;
-    cancelHighResolutionRequest();
-    highResolutionRequested = false;
-
-    const sourceSrcset = heroSource.getAttribute(`data-${theme}-srcset`);
-    const sourceType = heroSource.getAttribute(`data-${theme}-type`);
-    const heroSrcset = heroImage.getAttribute(`data-${theme}-srcset`);
-    const heroSrc = heroImage.getAttribute(`data-${theme}-src`);
-    const lqip = fullImage.getAttribute(`data-${theme}-lqip`);
-    const fullSrc = fullImage.getAttribute(`data-${theme}-full-src`);
-    const fullSrcset = fullImage.getAttribute(`data-${theme}-full-srcset`);
-    if (!sourceType || !sourceSrcset || !heroSrcset || !heroSrc || !lqip || !fullSrc || !fullSrcset) return;
-
-    heroSource.type = sourceType;
-    heroSource.srcset = sourceSrcset;
-    heroImage.srcset = heroSrcset;
-    heroImage.src = heroSrc;
-    fullImage.removeAttribute('srcset');
-    fullImage.src = lqip;
-    fullImage.dataset.fullSrc = fullSrc;
-    fullImage.dataset.fullSrcset = fullSrcset;
-    cachedMotionBlueprint = undefined;
-    if (requestedTarget === 1) requestHighResolution();
-  };
-
-  const handleHeroLoad = () => {
-    cachedMotionBlueprint = undefined;
-    scheduleGeometryMeasurement();
-    if (!highResolutionRequested) reuseDecodedHero();
-  };
-
-  const cancelSettleAnimations = () => {
-    for (const animation of settleAnimations.splice(0)) animation.cancel();
-  };
-
-  const setMotionLayerHints = (active: boolean) => {
-    for (const track of motionTracks) {
-      if (active) track.element.style.willChange = 'transform';
-      else track.element.style.removeProperty('will-change');
+  const cullOffscreenDrawerContent = () => {
+    // 抽屉展开只会继续向下运动；初始视口下方的模块不可能在动画中出现。
+    // 暂停这些子树的绘制可避免浏览器把整张长主页栅格化为一个巨型合成层。
+    for (const element of motionCullCandidates) {
+      if (element.getBoundingClientRect().top >= window.innerHeight + 96) {
+        element.dataset.homeMotionOffscreen = 'true';
+      } else {
+        delete element.dataset.homeMotionOffscreen;
+      }
     }
   };
 
+  const restoreVisibleDrawerContent = () => {
+    for (const element of motionCullCandidates) {
+      if (element.getBoundingClientRect().top < window.innerHeight + 96) {
+        delete element.dataset.homeMotionOffscreen;
+      }
+    }
+  };
+
+  const handleKeyboardReveal = (event: KeyboardEvent) => {
+    if (state !== 'collapsed') return;
+    const revealsOffscreenContent = KEYBOARD_REVEAL_KEYS.has(event.key)
+      || (event.ctrlKey && event.key.toLowerCase() === 'f');
+    if (revealsOffscreenContent) restoreDrawerContent();
+  };
+
+  const images = createHomeCoverImages({
+    root: documentElement, heroImage, heroSource, fullImage,
+    getMotionState: () => ({ expanded: state === 'expanded', wantsExpanded: requestedTarget === 1 }),
+    onGeometryInvalidated: () => {
+      cachedMotionBlueprint = undefined;
+      scheduleGeometryMeasurement();
+    },
+  });
+  const cancelSettleAnimations = () => timeline.cancelSettle();
+  const setMotionLayerHints = (active: boolean) => timeline.setActive(active);
   const disposeTimelines = () => {
     cancelProgressFrame();
     if (stableCleanupTimer !== undefined) window.clearTimeout(stableCleanupTimer);
     stableCleanupTimer = undefined;
-    for (const animation of dragAnimations.splice(0)) animation.cancel();
-    cancelSettleAnimations();
-    setMotionLayerHints(false);
-    motionTracks.splice(0);
+    timeline.dispose();
   };
-
-  const createProgressAnimation = (
-    element: HTMLElement | SVGElement,
-    frameAt: (value: number) => Keyframe,
-  ) => {
-    const track = { element, frameAt };
-    motionTracks.push(track);
-    const animation = element.animate([frameAt(0), frameAt(1)], {
-      duration: TIMELINE_DURATION,
-      easing: 'linear',
-      fill: 'both',
-    });
-    animation.pause();
-    dragAnimations.push(animation);
-  };
-
-  const createTimelines = (blueprint: MotionBlueprint) => {
+  const createTimelines = (blueprint: HomeCoverMotionBlueprint) => {
     disposeTimelines();
-    const { geometry, imageWidth, imageHeight } = blueprint;
-
-    fullImage.style.width = `${imageWidth}px`;
-    fullImage.style.height = `${imageHeight}px`;
-
-    createProgressAnimation(stage, (value) => {
-      const scaleX = interpolate(geometry.viewportScaleX, 1, value);
-      const scaleY = interpolate(geometry.viewportScaleY, 1, value);
-      return {
-        transform: `translate3d(${geometry.viewportX * (1 - value)}px, ${geometry.viewportY * (1 - value)}px, 0) scale3d(${scaleX}, ${scaleY}, 1)`,
-      };
-    });
-    createProgressAnimation(viewport, (value) => {
-      const translateX = geometry.viewportX * (1 - value);
-      const translateY = geometry.viewportY * (1 - value);
-      const scaleX = interpolate(geometry.viewportScaleX, 1, value);
-      const scaleY = interpolate(geometry.viewportScaleY, 1, value);
-      return {
-        transform: `scale3d(${1 / scaleX}, ${1 / scaleY}, 1) translate3d(${-translateX}px, ${-translateY}px, 0)`,
-      };
-    });
-    createProgressAnimation(fullImage, (value) => ({
-      transform: `translate3d(${interpolate(geometry.coverX, geometry.containX, value)}px, ${interpolate(geometry.coverY, geometry.containY, value)}px, 0) scale(${interpolate(geometry.coverScale, geometry.containScale, value)})`,
-    }));
-
-    createProgressAnimation(drawer, (value) => ({
-      transform: `translate3d(0, ${geometry.drawerDistance * value}px, 0)`,
-    }));
-
-    createProgressAnimation(toggle, (value) => ({
-      transform: `translate3d(${geometry.handleX * (1 - value)}px, ${geometry.handleY * (1 - value)}px, 0) translateX(-50%)`,
-    }));
-    const icon = toggle.querySelector<SVGElement>('svg');
-    if (icon) createProgressAnimation(icon, (value) => ({ transform: `rotate(${180 * value}deg)` }));
+    timeline.rebuild(blueprint);
   };
 
   const applyProgress = (nextProgress: number) => {
     progress = Math.min(Math.max(nextProgress, 0), 1);
-    for (const animation of dragAnimations) animation.currentTime = progress * TIMELINE_DURATION;
+    timeline.seek(progress);
   };
 
   const cancelProgressFrame = () => {
@@ -405,14 +252,7 @@ function initHomeHeroMotion() {
 
   const sampleProgress = () => {
     if (progressFrame !== undefined) return progress;
-    const settlingTime = settleAnimations[0]?.currentTime;
-    if (typeof settlingTime === 'number' && settleDuration > 0) {
-      const linearProgress = Math.min(Math.max(settlingTime / settleDuration, 0), 1);
-      progress = settleStartProgress + (settleTarget - settleStartProgress) * easeHomeCoverSettle(linearProgress);
-      return progress;
-    }
-    const dragTime = dragAnimations[0]?.currentTime;
-    if (typeof dragTime === 'number') progress = Math.min(Math.max(dragTime / TIMELINE_DURATION, 0), 1);
+    progress = timeline.sample(progress);
     return progress;
   };
 
@@ -428,7 +268,7 @@ function initHomeHeroMotion() {
       applyProgress(currentProgress);
       if (state === 'dragging') setMotionLayerHints(true);
       else if (wasSettling) settleTo(requestedTarget);
-      else setMotionLayerHints(false);
+      else settleStable(requestedTarget);
     });
   };
 
@@ -445,7 +285,8 @@ function initHomeHeroMotion() {
     // 先读取并缓存几何，再写入 inert、dataset 与 will-change，避免输入首帧强制同步布局。
     const blueprint = cachedMotionBlueprint ?? measureMotionBlueprint();
     cachedMotionBlueprint = blueprint;
-    if (motionTracks.length === 0) createTimelines(blueprint);
+    if (!timeline.hasTracks()) createTimelines(blueprint);
+    cullOffscreenDrawerContent();
     if (stableCleanupTimer !== undefined) window.clearTimeout(stableCleanupTimer);
     stableCleanupTimer = undefined;
     setElementUnavailable(drawer, false);
@@ -462,7 +303,7 @@ function initHomeHeroMotion() {
     const stableSequence = ++settleSequence;
     progress = target;
     requestedTarget = target;
-    if (motionTracks.length > 0) applyProgress(target);
+    if (timeline.hasTracks()) applyProgress(target);
     cancelSettleAnimations();
     state = target === 1 ? 'expanded' : 'collapsed';
     shell.dataset.state = state;
@@ -476,8 +317,7 @@ function initHomeHeroMotion() {
       documentElement.dataset.homeCoverExpanded = 'true';
       // 展开动画只复用已解码的首图；待舞台稳定后再请求高清资源，
       // 避免首次交互与图片网络调度、解码争抢同一批帧。
-      requestHighResolution();
-      commitHighResolution();
+      images.enterExpanded();
       if (status) status.textContent = '全图壁纸已展开';
     } else {
       delete documentElement.dataset.homeCoverExpanded;
@@ -498,9 +338,15 @@ function initHomeHeroMotion() {
         setElementUnavailable(footer, true);
       }
       setMotionLayerHints(false);
-      if (target === 0) releaseHighResolution();
+      if (target === 0) {
+        // 收起态不保留带 transform 的暂停 WAAPI。否则长抽屉会持续成为一个
+        // 数千像素高的合成层，恢复视口外内容时仍会整层重绘。
+        disposeTimelines();
+        images.releaseToPreview();
+        cullOffscreenDrawerContent();
+      }
     };
-    if (dragAnimations.length === 0 && settleAnimations.length === 0) finalizeStableState();
+    if (!timeline.hasAnimations()) finalizeStableState();
     else stableCleanupTimer = window.setTimeout(finalizeStableState, 48);
   };
 
@@ -518,22 +364,12 @@ function initHomeHeroMotion() {
     shell.dataset.state = state;
     updateWaves();
     const sequence = ++settleSequence;
-    settleStartProgress = currentProgress;
-    settleTarget = target;
-    settleDuration = duration;
-    cancelSettleAnimations();
-    for (const track of motionTracks) {
-      settleAnimations.push(track.element.animate(
-        [track.frameAt(currentProgress), track.frameAt(target)],
-        { duration, easing: DRAWER_EASING, fill: 'both' },
-      ));
-    }
-    const lead = settleAnimations[0];
-    if (!lead) {
+    const completion = timeline.settle(currentProgress, target, duration);
+    if (!completion) {
       settleStable(target);
       return;
     }
-    void lead.finished.then(() => {
+    void completion.then(() => {
       if (sequence === settleSequence) settleStable(target);
     }).catch(() => {});
   };
@@ -543,7 +379,6 @@ function initHomeHeroMotion() {
     settleSequence += 1;
     cancelSettleAnimations();
     beginMotion();
-    for (const animation of dragAnimations) animation.pause();
   };
 
   const beginGesture = (clientX: number, clientY: number) => {
@@ -682,20 +517,16 @@ function initHomeHeroMotion() {
     finishGesture(event.clientX, event.clientY, event.type === 'pointercancel');
   };
 
-  const handleToggle = (event: MouseEvent) => {
-    if (performance.now() < suppressClickUntil) return;
-    const nextTarget: 0 | 1 = requestedTarget === 1 ? 0 : 1;
+  // 按钮与滚轮共享同一条可反向时间线，不再由滚轮逐帧改写进度。
+  const animateToTarget = (target: 0 | 1, immediate = false) => {
     interruptMotion();
-    settleTo(nextTarget, event.detail === 0 ? 0 : nextTarget === 1 ? TOGGLE_EXPAND_MS : TOGGLE_COLLAPSE_MS);
+    settleTo(target, immediate ? 0 : target === 1 ? TOGGLE_EXPAND_MS : TOGGLE_COLLAPSE_MS);
   };
 
-  const resetWheelGesture = () => {
-    if (wheelResetTimer !== undefined) window.clearTimeout(wheelResetTimer);
-    wheelResetTimer = undefined;
-    wheelIntentDistance = 0;
-    wheelStartProgress = progress;
-    wheelStartTime = 0;
-    lastWheelTime = 0;
+  const handleToggle = (event: MouseEvent) => {
+    if (performance.now() < suppressClickUntil) return;
+    wheelTrigger.reset();
+    animateToTarget(requestedTarget === 1 ? 0 : 1, event.detail === 0);
   };
 
   const holdWheelAtPageBoundary = () => {
@@ -704,23 +535,7 @@ function initHomeHeroMotion() {
     wheelBoundaryTimer = window.setTimeout(() => {
       wheelBoundaryTimer = undefined;
       wheelRequiresFreshInput = false;
-    }, WHEEL_GESTURE_IDLE_MS);
-  };
-
-  const finishWheelGesture = () => {
-    if (wheelResetTimer !== undefined) window.clearTimeout(wheelResetTimer);
-    wheelResetTimer = undefined;
-    if (wheelStartTime === 0) return;
-    const elapsedMs = Math.max(performance.now() - wheelStartTime, 1);
-    const release = resolveHomeCoverRelease({
-      progress: sampleProgress(),
-      intentDistance: wheelIntentDistance,
-      elapsedMs,
-      reduceMotion: reduceMotion.matches,
-    });
-    wheelStartTime = 0;
-    wheelIntentDistance = 0;
-    settleTo(release.target, release.durationMs);
+    }, HOME_COVER_WHEEL_IDLE_MS);
   };
 
   const handleWheel = (event: WheelEvent) => {
@@ -729,50 +544,36 @@ function initHomeHeroMotion() {
 
     const intentDelta = normalizeHomeCoverWheelIntent(event.deltaY, event.deltaMode, window.innerHeight);
     if (intentDelta === 0) return;
+    const now = performance.now();
+    const ownsBurst = wheelTrigger.ownsBurst(now);
     const currentProgress = sampleProgress();
-    if (currentProgress <= 0 && intentDelta > 0 && (window.scrollY > 1 || wheelRequiresFreshInput)) {
+    if (!ownsBurst && state !== 'settling' && currentProgress <= 0 && intentDelta > 0 && (window.scrollY > 1 || wheelRequiresFreshInput)) {
       holdWheelAtPageBoundary();
       return;
     }
-    if (!resolveHomeCoverTakeover({
+    const canTakeOver = state === 'settling' || resolveHomeCoverTakeover({
       isHomeRoute: true,
       pageScrollY: window.scrollY,
       progress: currentProgress,
       intentDelta,
       freshInput: !wheelRequiresFreshInput,
-    })) {
-      if (wheelStartTime !== 0) finishWheelGesture();
-      return;
-    }
+    });
+    if (!ownsBurst && !canTakeOver) return;
 
     if (shouldIgnoreHomeCoverGesture(event.target)) return;
+    const decision = wheelTrigger.push({ intentDelta, now, requestedTarget, canTakeOver });
+    if (!decision.consume) return;
     event.preventDefault();
-    const now = performance.now();
-    if (wheelStartTime === 0 || now - lastWheelTime > WHEEL_GESTURE_IDLE_MS) {
-      interruptMotion();
-      wheelStartProgress = progress;
-      wheelIntentDistance = 0;
-      wheelStartTime = now;
-    }
-    lastWheelTime = now;
-    wheelIntentDistance += intentDelta;
-    if (state !== 'dragging') {
-      state = 'dragging';
-      shell.dataset.state = state;
-      updateWaves();
-    }
-    queueProgress(resolveHomeCoverProgress({
-      startProgress: wheelStartProgress,
-      intentDelta: wheelIntentDistance,
-      travelDistance: wheelTravelDistance,
-    }));
-    if (wheelResetTimer !== undefined) window.clearTimeout(wheelResetTimer);
-    wheelResetTimer = window.setTimeout(finishWheelGesture, WHEEL_GESTURE_IDLE_MS);
+    if (decision.target !== null) animateToTarget(decision.target);
   };
 
   // 阅读正文时释放阻塞式滚轮监听，让浏览器直接滚动。
   const syncWheelListener = () => {
     const needed = desktopWheel.matches && (state !== 'collapsed' || window.scrollY <= 1);
+    if (state === 'collapsed') {
+      if (window.scrollY <= 1) cullOffscreenDrawerContent();
+      else restoreVisibleDrawerContent();
+    }
     if (needed === wheelListening) return;
     wheelListening = needed;
     if (needed) document.addEventListener('wheel', handleWheel, { passive: false });
@@ -808,15 +609,21 @@ function initHomeHeroMotion() {
     updateWaves();
   });
   coverObserver.observe(source);
-  const themeObserver = new MutationObserver(syncHeroTheme);
-  themeObserver.observe(documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  const motionCullObserver = new IntersectionObserver((entries) => {
+    if (state !== 'collapsed') return;
+    for (const entry of entries) {
+      if (entry.isIntersecting && entry.target instanceof HTMLElement) {
+        delete entry.target.dataset.homeMotionOffscreen;
+      }
+    }
+  }, { rootMargin: '96px 0px' });
+  for (const element of motionCullCandidates) motionCullObserver.observe(element);
 
   updateLayoutGeometry();
   scheduleGeometryMeasurement();
   settleStable(0);
-  heroImage.addEventListener('load', handleHeroLoad);
-  syncHeroTheme();
-  if (heroImage.complete) handleHeroLoad();
+  images.mount();
+  cullOffscreenDrawerContent();
   toggle.addEventListener('click', handleToggle);
   document.addEventListener('touchstart', handleTouchStart, { passive: true });
   document.addEventListener('touchend', handleTouchEnd);
@@ -826,6 +633,7 @@ function initHomeHeroMotion() {
   document.addEventListener('pointerup', handlePenFinish);
   document.addEventListener('pointercancel', handlePenFinish);
   document.addEventListener('keydown', handleKeydown);
+  document.addEventListener('keydown', handleKeyboardReveal, true);
   document.addEventListener('wheel', observeNativeWheel, { passive: true });
   window.addEventListener('scroll', syncWheelListener, { passive: true });
   desktopWheel.addEventListener('change', syncWheelListener);
@@ -835,10 +643,11 @@ function initHomeHeroMotion() {
 
   cleanupCurrentHero = () => {
     settleSequence += 1;
-    cancelHighResolutionRequest();
+    images.dispose();
     layoutObserver.disconnect();
     coverObserver.disconnect();
-    themeObserver.disconnect();
+    motionCullObserver.disconnect();
+    restoreDrawerContent();
     disposeTimelines();
     if (layoutUpdateFrame !== undefined) window.cancelAnimationFrame(layoutUpdateFrame);
     if (geometryMeasureFrame !== undefined) window.cancelAnimationFrame(geometryMeasureFrame);
@@ -846,7 +655,7 @@ function initHomeHeroMotion() {
     geometryMeasureFrame = undefined;
     cachedMotionBlueprint = undefined;
     measuredStageRect = undefined;
-    resetWheelGesture();
+    wheelTrigger.reset();
     if (wheelBoundaryTimer !== undefined) window.clearTimeout(wheelBoundaryTimer);
     wheelBoundaryTimer = undefined;
     wheelRequiresFreshInput = false;
@@ -869,7 +678,6 @@ function initHomeHeroMotion() {
     setElementUnavailable(drawer, false);
     setElementUnavailable(footer, false);
     toggle.removeEventListener('click', handleToggle);
-    heroImage.removeEventListener('load', handleHeroLoad);
     document.removeEventListener('touchstart', handleTouchStart);
     document.removeEventListener('touchmove', handleTouchMove);
     document.removeEventListener('touchend', handleTouchEnd);
@@ -879,6 +687,7 @@ function initHomeHeroMotion() {
     document.removeEventListener('pointerup', handlePenFinish);
     document.removeEventListener('pointercancel', handlePenFinish);
     document.removeEventListener('keydown', handleKeydown);
+    document.removeEventListener('keydown', handleKeyboardReveal, true);
     document.removeEventListener('wheel', handleWheel);
     document.removeEventListener('wheel', observeNativeWheel);
     window.removeEventListener('scroll', syncWheelListener);

@@ -2,11 +2,12 @@
 import type { CollectionEntry } from 'astro:content';
 import PublicLayout from './PublicLayout.astro';
 import FormattedDate from '../components/blog/FormattedDate.astro';
-import { withBase } from '../lib/urls';
+import { blogCategoryPath, withBase } from '../lib/urls';
 import blogPostCss from '../styles/blog-post.scss?url';
 
 type BlogData = CollectionEntry<'blog'>['data'];
-type Props = Pick<BlogData, 'title' | 'description' | 'pubDate'> & {
+type Props = Pick<BlogData, 'title' | 'description'> & {
+  pubDate?: Date;
   updatedDate?: Date;
   dir1?: string;
   dir2?: string;
@@ -36,19 +37,17 @@ const {
   <article class="public-content-page">
     <div class="prose">
       {!hidePageHeader && <div class="title">
-        {showDate && (
-          <div class="date">
-            <FormattedDate date={pubDate} />
-            {updatedDate && <div class="last-updated-on">Last updated on <FormattedDate date={updatedDate} /></div>}
-          </div>
-        )}
+        {showDate && pubDate && <div class="date">
+          <FormattedDate date={pubDate} />
+          {updatedDate && <div class="last-updated-on">Last updated on <FormattedDate date={updatedDate} /></div>}
+        </div>}
         <h1>{heading}</h1>
         {(dir1 || tags.length > 0) && (
           <div class="post-meta">
             {dir1 && (
               <span class="post-category">
-                分类：<a href={withBase(`/blog/category/${encodeURIComponent(dir1)}/`)}>{dir1}</a>
-                {dir2 && <span> / <a href={withBase(`/blog/category/${encodeURIComponent(dir1)}/${encodeURIComponent(dir2)}/`)}>{dir2}</a></span>}
+                分类：<a href={blogCategoryPath(dir1)}>{dir1}</a>
+                {dir2 && <span> / <a href={blogCategoryPath(dir1, dir2)}>{dir2}</a></span>}
               </span>
             )}
             {tags.length > 0 && (
@@ -67,9 +66,9 @@ const {
 
 <style>
   .public-content-page {
-    width: min(960px, calc(100% - 32px));
+    width: min(1040px, calc(100% - 48px));
     min-width: 0;
-    margin: 2rem auto 0;
+    margin: clamp(1.5rem, 3vw, 2.75rem) auto 0;
   }
 
   .public-content-page .prose {
@@ -78,6 +77,9 @@ const {
   }
 
   @media (max-width: 680px) {
-    .public-content-page { margin-top: 1rem; }
+    .public-content-page {
+      width: calc(100% - 24px);
+      margin-top: 1rem;
+    }
   }
 </style>

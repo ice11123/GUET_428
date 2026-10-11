@@ -6,16 +6,16 @@ import JsonLd from '../../../components/blog/JsonLd.astro';
 import { resolveDirs } from '../../../lib/utils';
 import { LAB_GROUPS } from '../../../config/labGroups.ts';
 import { DIR2_ORDER, SITE_START_DATE } from '../../../consts';
-import { withBase } from '../../../lib/urls';
+import { blogCategorySegment, parseBlogCategorySegment, withBase } from '../../../lib/urls';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  const pathSet = new Set<string>(LAB_GROUPS);
+  const pathSet = new Set<string>(LAB_GROUPS.map(blogCategorySegment));
   for (const post of posts) {
     const { dir1, dir2 } = resolveDirs(post);
     if (dir1) {
-      pathSet.add(dir1);
-      if (dir2) pathSet.add(`${dir1}/${dir2}`);
+      pathSet.add(blogCategorySegment(dir1));
+      if (dir2) pathSet.add(`${blogCategorySegment(dir1)}/${blogCategorySegment(dir2)}`);
     }
   }
   return Array.from(pathSet).map(p => ({ params: { slug: p } }));
@@ -24,8 +24,8 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const categoryPath = slug!;
 const segments = categoryPath.split('/');
-const filterDir1 = segments[0];
-const filterDir2 = segments.length >= 2 ? segments[1] : '';
+const filterDir1 = parseBlogCategorySegment(segments[0]);
+const filterDir2 = segments.length >= 2 ? parseBlogCategorySegment(segments[1]) : '';
 
 const allPosts = await getCollection('blog');
 const filtered = allPosts.filter(post => {
@@ -57,6 +57,7 @@ const collectionPageLd = {
   dir1={filterDir1}
   dir2={filterDir2}
   tags={[]}
+  showDate={false}
   hidePageHeader={!filterDir2}
 >
   <JsonLd slot="head" data={collectionPageLd} />

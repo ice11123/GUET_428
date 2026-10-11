@@ -143,7 +143,7 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
             data-light-full-srcset={homeHeroFullSrcset}
             data-dark-full-src={homeHeroDarkFullFallback}
             data-dark-full-srcset={homeHeroDarkFullSrcset}
-            data-full-sizes="(min-width: 1200px) calc(100vw - 248px), (min-width: 1000px) calc(100vw - 220px), 100vw"
+            data-full-sizes="100vw"
             alt=""
             width={homeHeroImage.width}
             height={homeHeroImage.height}
@@ -186,7 +186,7 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
         <div class="home-main-column">
           <LabGroupShowcase posts={allPosts} />
 
-          <section class="maintenance-section" aria-labelledby="maintenance-home-title">
+          <section class="maintenance-section" aria-labelledby="maintenance-home-title" data-home-motion-cull>
             <header class="maintenance-heading">
               <div class="maintenance-title-block">
                 <span>03</span>
@@ -448,6 +448,7 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
 
   .home-content-layout { position: relative; z-index: 4; width: min(1080px, calc(100% - 48px)); margin: 40px auto 0; }
   .home-main-column { min-width: 0; }
+  .home-drawer :global([data-home-motion-offscreen='true']) { visibility: hidden; }
   .home-drawer { position: relative; z-index: 4; display: flow-root; min-width: 0; background: var(--canvas); }
   .maintenance-archive-link:focus-visible,
   .maintenance-entry > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }

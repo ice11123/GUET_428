@@ -43,6 +43,12 @@
   --alert-caution-bg: rgba(229, 83, 75, 0.08);
   --alert-caution-border: #e5534b;
 
+  --surface-navigation: color-mix(in srgb, var(--surface) 84%, var(--canvas));
+  --surface-content: var(--surface);
+  --surface-overlay: var(--surface);
+  --elevation-content: 0 16px 40px color-mix(in srgb, var(--text-primary) 6%, transparent);
+  --elevation-overlay: 0 20px 60px color-mix(in srgb, var(--text-primary) 22%, transparent);
+
   /* Z-index scale */
   --z-node-header: 1;
   --z-toc-indicator: 10;

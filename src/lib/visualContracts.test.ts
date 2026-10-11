@@ -71,7 +71,7 @@ test('TOC、搜索与 Spoiler 使用新的交互契约', () => {
   const tocStyles = readSource('styles/article-toc-sidebar.scss');
   assert.doesNotMatch(toc, /\.style\.height/);
   assert.match(toc, /scaleY\(\$\{length\}\)/);
-  assert.match(toc, /createElement\('button'\)/);
+  assert.match(toc, /createElement\('a'\)/);
   assert.match(toc, /astro:before-swap', teardownToc/);
   assert.match(toc, /headingResizeObserver/);
   assert.match(toc, /findActiveHeadingIndex/);
@@ -177,13 +177,13 @@ test('文章页使用紧凑导语、独立正文版心与可追溯作者', () =>
   assert.match(layout, /class="article-breadcrumbs"/);
   assert.match(layout, /class="article-description"/);
   assert.match(layout, /class="article-meta"/);
-  assert.match(layout, /class="post-author-link" href=\{PERSONAL_BLOG_URL\}/);
+  assert.match(layout, /class="post-author-name"/);
   assert.match(layout, /class="prose article-content"/);
-  assert.match(layout, /查看源文件/);
+  assert.match(layout, /const sourceLabel/);
   assert.match(constants, /PERSONAL_BLOG_URL\s*=\s*'https:\/\/ice11123\.github\.io\/blog_test2\/'/);
   assert.match(styles, /\.article-header h1\s*\{[\s\S]*width:\s*100%[\s\S]*max-width:\s*none/);
   assert.match(styles, /\.article-header h1\s*\{[\s\S]*text-align:\s*center[\s\S]*text-wrap:\s*pretty/);
-  assert.match(styles, /\.post-author-link\s*\{[\s\S]*color:\s*#b4232c/);
+  assert.match(styles, /\.post-author-name\s*\{[\s\S]*color:\s*#b4232c/);
   assert.match(styles, /\.blog-post-page \.prose\s*\{[\s\S]*font-size:\s*17px[\s\S]*line-height:\s*1\.86/);
 });
 
@@ -218,9 +218,9 @@ test('非首屏样式、搜索引擎与移动端侧栏按需加载', () => {
 
   assert.doesNotMatch(search, /^import Fuse\b/m);
   assert.match(search, /await import\(['"]fuse\.js['"]\)/);
-  assert.match(search, /void ensureFuse\(\)/);
-  assert.ok(search.indexOf("input.focus({ preventScroll: true })") < search.indexOf('void ensureFuse()'));
-  assert.match(search, /搜索功能加载失败，请稍后重试/);
+  assert.match(search, /void performSearch\(''\)/);
+  assert.ok(search.indexOf("input.focus({ preventScroll: true })") < search.indexOf("void performSearch('')"));
+  assert.match(search, /搜索索引加载失败，请检查网络后重试/);
 });
 
 test('顶部栏背景全宽且导航内容保持居中约束', () => {
@@ -297,7 +297,7 @@ test('关于页运行状态提供可见的手动刷新入口', () => {
 
 test('主页壁纸支持可访问的点击、触屏手势与桌面滚轮展开', () => {
   const home = readSource('pages/index.astro');
-  const motion = readSource('scripts/home-hero-motion.ts');
+  const motion = readSource('scripts/home-hero-motion.ts') + readSource('lib/homeCoverTimeline.ts') + readSource('lib/homeCoverImages.ts');
   const gesture = readSource('lib/homeCoverGesture.ts');
   const geometry = readSource('lib/homeCoverMotionGeometry.ts');
 
@@ -366,21 +366,23 @@ test('主页壁纸支持可访问的点击、触屏手势与桌面滚轮展开',
   assert.doesNotMatch(motion, /createProgressAnimation\(source/);
   assert.doesNotMatch(motion, /opacity:\s*1\s*-\s*value/);
   assert.doesNotMatch(motion, /96\s*\*\s*value/);
-  assert.match(motion, /requestHighResolution\(\)/);
+  assert.match(motion, /images\.enterExpanded\(\)/);
   assert.match(motion, /IntersectionObserver/);
   assert.doesNotMatch(motion, /startViewTransition/);
-  assert.match(motion, /window\.addEventListener\('scroll',\s*syncWheelListener,\s*\{\s*passive:\s*true\s*\}\)/);
-  assert.match(motion, /document\.addEventListener\('wheel',\s*observeNativeWheel,\s*\{\s*passive:\s*true\s*\}\)/);
+  assert.match(motion, /addEventListener\('scroll', syncWheelListener, \{ passive: true \}\)/);
   assert.doesNotMatch(motion, /aria-modal|event\.key\s*===\s*'Tab'/);
   assert.match(motion, /prefers-reduced-motion:\s*reduce/);
-  assert.match(motion, /event\.detail\s*===\s*0\s*\?\s*0/);
+  assert.match(motion, /animateToTarget\(requestedTarget\s*===\s*1\s*\?\s*0\s*:\s*1,\s*event\.detail\s*===\s*0\)/);
+  assert.match(motion, /settleTo\(target,\s*immediate\s*\?\s*0\s*:/);
+  assert.match(motion, /if \(decision\.target !== null\) animateToTarget\(decision\.target\)/);
+  assert.doesNotMatch(motion, /wheelTravelDistance|wheelStartProgress|finishWheelGesture/);
   assert.match(motion, /event\.key\s*!==\s*'Escape'/);
   assert.match(motion, /settleTo\(0,\s*0\)/);
   assert.doesNotMatch(motion, /createProgressAnimation\(sidebar/);
   assert.doesNotMatch(motion, /setElementUnavailable\(sidebar/);
   assert.match(motion, /stageLeft\s*=\s*sidebarIsVisible[\s\S]*sidebar\.getBoundingClientRect\(\)\.right\s*:\s*0/);
   assert.ok(motion.indexOf('const blueprint = cachedMotionBlueprint') < motion.indexOf('setElementUnavailable(drawer, false)'));
-  assert.match(motion, /releaseHighResolution\(\)/);
+  assert.match(motion, /images\.releaseToPreview\(\)/);
   assert.match(home, /content-visibility:\s*auto/);
   assert.match(home, /\.home-drawer\s*\{[^}]*display:\s*flow-root/);
 });
@@ -432,7 +434,7 @@ test('静态公共页隐藏伪发布日期并保持单友链卡片合适宽度',
 
   assert.match(layout, /showDate\?: boolean/);
   assert.match(layout, /showDate\s*=\s*true/);
-  assert.match(layout, /\{showDate\s*&&\s*\(/);
+  assert.match(layout, /showDate && pubDate &&/);
   assert.match(about, /showDate=\{false\}/);
   assert.match(friends, /showDate=\{false\}/);
   assert.match(friends, /withBase\('\/friends\/blog-test2-avatar\.jpg'\)/);
@@ -456,7 +458,7 @@ test('四个实验室分组共享顺序、固定路由和受控管理台输入',
   const admin = readSource('pages/admin/index.astro');
 
   assert.match(groupConfig, /\['电源组', '飞控组', '小车组', '其他'\] as const/);
-  assert.match(categoryRoute, /new Set<string>\(LAB_GROUPS\)/);
+  assert.match(categoryRoute, /new Set<string>\(LAB_GROUPS.map\(blogCategorySegment\)\)/);
   assert.match(contentConfig, /z\.enum\(LAB_GROUPS\)/);
   assert.match(admin, /<select name="dir1" required>/);
   assert.match(showcase, /slice\(0, 2\)/);

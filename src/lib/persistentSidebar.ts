@@ -1,4 +1,6 @@
 import type { SidebarPost } from './blogData';
+import { compareDirectoryPostMetadata } from './postOrdering.ts';
+export { matchesTagFilter } from './tagDiscovery.ts';
 import { DEFAULT_LAB_GROUP, LAB_GROUPS } from '../config/labGroups.ts';
 
 export interface SidebarStats {
@@ -31,7 +33,7 @@ export function computeSidebarStats(posts: SidebarPost[]): SidebarStats {
 }
 
 function byOldest(a: SidebarPost, b: SidebarPost): number {
-  return a.pubDate.valueOf() - b.pubDate.valueOf();
+  return compareDirectoryPostMetadata(a.title, a.pubDate, b.title, b.pubDate, a.slug, b.slug);
 }
 
 export function buildArticleDirectory(posts: SidebarPost[]): ArticleDirectorySection[] {
