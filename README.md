@@ -18,7 +18,9 @@ pnpm run build
 
 ## 添加文章
 
-在 `src/content/blog/` 下创建 Markdown 或 MDX 文件。目录层级会自动成为文章分类。
+在 `src/content/blog/` 下创建 Markdown 或 MDX 文件。`dir1` 必须为电源组、飞控组、小车组或其他；推荐显式填写 `dir2` 并让目录层级与分类一致。
+
+网页发文、图片上传与自动部署步骤见 [GitHub 发文指南](src/content/blog/其他/站点指南/github-publishing-guide.md)，也可下载该 Markdown 文件交给协作者。
 
 文章 frontmatter 可填写 `author` 与 `sourceUrl`。现有文章作者统一为“离子怪”，文章页作者名会链接到其个人博客；未填写作者时继续使用实验室名称。
 
@@ -36,7 +38,7 @@ pnpm run build
 
 `SITE_URL` 与 `SITE_BASE` 可在其他托管环境覆盖；未设置时默认使用 GitHub Pages 地址和 `/GUET_428` 子路径。
 
-管理台当前只支持本地草稿与文件导出。GUET_428 尚未配置独立 Worker、KV 或 GitHub OAuth，因此云端写入保持禁用。
+管理台云端写入保持禁用；部署工作流已配置只读状态服务。协作者通过 GitHub 提交文章，不需要管理台发布权限。
 
 ## 源码说明
 
