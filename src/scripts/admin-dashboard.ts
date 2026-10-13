@@ -299,12 +299,18 @@ function loadForm() {
   updatePreview();
 }
 
+// 预览按分类推断草稿在 content 目录中的位置，供 ::video 解析相对路径。
+function previewSourceDir() {
+  const segments = [field('dir1')?.value?.trim(), field('dir2')?.value?.trim()].filter(Boolean);
+  return ['src/content/blog', ...segments].join('/');
+}
+
 function updatePreview() {
   const body = field('body');
   if (!preview || !body) return;
   if (previewStatus) previewStatus.textContent = '正在更新预览…';
   try {
-    preview.innerHTML = renderPreview(body.value);
+    preview.innerHTML = renderPreview(body.value, { sourceDir: previewSourceDir() });
     void renderPreviewMermaid(preview as HTMLElement).finally(() => {
       if (!disposed && previewStatus) previewStatus.textContent = `已更新于 ${formatTime(new Date().toISOString())}`;
     });

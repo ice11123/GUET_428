@@ -8,6 +8,7 @@ import * as gestureModule from '../src/lib/homeCoverGesture.ts';
 import * as geometryModule from '../src/lib/homeCoverMotionGeometry.ts';
 import * as statusModule from '../src/lib/publicStatusRequest.ts';
 import * as labGroupsModule from '../src/config/labGroups.ts';
+import * as videoDirectiveModule from '../src/lib/videoDirective.ts';
 import { normalizeDeploymentStatus } from '../src/lib/deploymentStatus.js';
 
 // 执行实际浏览器模块，仅替换 DOM、下载和外部渲染边界，避免测试复制业务逻辑。
@@ -556,6 +557,8 @@ test('导出文件名、扩展名和正文采用同一份最新表单快照', as
 
 test('预览只移除文档开头元数据，不吞掉正文代码和分隔线', () => {
   const dependencies = Object.fromEntries(['dompurify', 'katex', 'marked', 'prismjs', ...['markup', 'css', 'clike', 'javascript', 'typescript', 'json', 'bash', 'python'].map((name) => `prismjs/components/prism-${name}`)].map((name) => [name, {}]));
+  dependencies['./videoDirective.ts'] = videoDirectiveModule;
+  dependencies['./urls.ts'] = { withBase: (path) => path };
   const { stripDocumentSyntax } = loadRuntime('../src/lib/adminPreview.ts', {}, dependencies, 'exports.stripDocumentSyntax = stripDocumentSyntax;');
   const body = '# 教程\n\n```js\nexport const answer = 42;\n```\n\n---\n保留正文\n---\n';
   assert.equal(stripDocumentSyntax(body), body);

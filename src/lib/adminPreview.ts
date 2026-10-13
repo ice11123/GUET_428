@@ -10,6 +10,8 @@ import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-python';
+import { parseVideoDirective, renderVideoElement, replaceVideoDirectives, videoSourcePath } from './videoDirective.ts';
+import { withBase } from './urls.ts';
 
 const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
 const SAFE_URL = /^(?:https?:|mailto:|\/|#)/i;
@@ -129,6 +131,30 @@ function extractComponents(source: string, tokens: Map<string, string>): string 
   });
 }
 
+// 草稿视频不会进入构建产物，预览只能指向开发服务器上的源文件。
+function previewAssetUrl(reference: string, sourceDir: string): string {
+  const sourcePath = videoSourcePath(reference, sourceDir);
+  return sourcePath ? withBase(sourcePath) : reference;
+}
+
+function videoPreviewMarkup(raw: string, sourceDir: string): string {
+  try {
+    const directive = parseVideoDirective(raw);
+    return renderVideoElement(directive, (reference) => previewAssetUrl(reference, sourceDir));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return `<p class="preview-render-error">视频指令无法解析：${escapeHtml(message)}</p>`;
+  }
+}
+
+function extractVideos(source: string, tokens: Map<string, string>, sourceDir: string): string {
+  return replaceVideoDirectives(source, (raw) => {
+    const token = `ADMINPREVIEWVIDEO${tokens.size}TOKEN`;
+    tokens.set(token, videoPreviewMarkup(raw, sourceDir));
+    return `\n\n${token}\n\n`;
+  });
+}
+
 function extractMath(source: string, mathTokens: Map<string, string>): string {
   let next = source.replace(/\$\$([\s\S]*?)\$\$/g, (_all, expression) => {
     const token = `ADMINPREVIEWMATH${mathTokens.size}TOKEN`;
@@ -200,11 +226,18 @@ function createRenderer(): Renderer {
   return renderer;
 }
 
-export function renderPreview(source: string): string {
+export interface PreviewOptions {
+  /** 草稿正文所在目录（相对仓库根），用于解析 ::video 的相对路径。 */
+  sourceDir?: string;
+}
+
+export function renderPreview(source: string, options: PreviewOptions = {}): string {
+  const sourceDir = options.sourceDir ?? 'src/content/blog';
   const tokens = new Map<string, string>();
   const mathTokens = new Map<string, string>();
   let markdown = stripDocumentSyntax(source);
   markdown = preserveBlankLines(markdown, tokens);
+  markdown = extractVideos(markdown, tokens, sourceDir);
   markdown = extractComponents(markdown, tokens);
   markdown = extractMath(markdown, mathTokens);
   markdown = transformAlerts(markdown, tokens);
@@ -216,8 +249,8 @@ export function renderPreview(source: string): string {
       .replaceAll(token, replacement);
   }
   let sanitized = DOMPurify.sanitize(html, {
-    ADD_ATTR: ['class', 'data-mermaid-code', 'data-preview-component', 'open'],
-    ADD_TAGS: ['details', 'summary'],
+    ADD_ATTR: ['class', 'data-mermaid-code', 'data-preview-component', 'open', 'controls', 'playsinline', 'preload', 'poster', 'loop', 'muted', 'autoplay', 'width', 'height'],
+    ADD_TAGS: ['details', 'summary', 'video', 'source'],
     FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form'],
     FORBID_ATTR: ['style'],
   });
