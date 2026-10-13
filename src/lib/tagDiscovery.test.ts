@@ -70,7 +70,7 @@ test('标签无脚本可展开全部，脚本清理监听并保护输入法，�
 
 test('实验室作品素材、分组入口与近期文章保持独立交互', () => {
   const showcase = source('components/home/LabGroupShowcase.astro');
-  for (const name of ['电源组.png', '飞控组.png', '小车组.png']) assert.ok(showcase.includes(name));
+  for (const name of ['电源组.webp', '飞控组.webp', '小车组.webp']) assert.ok(showcase.includes(name));
   assert.match(showcase, /group-card-link/);
   assert.match(showcase, /group-recent/);
   assert.match(showcase, /prefers-reduced-motion/);
