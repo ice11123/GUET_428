@@ -169,6 +169,15 @@
       margin-top: .48em;
     }
 
+    video {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      margin: 1.7em 0;
+      border-radius: 12px;
+      background: var(--surface-subtle);
+    }
   }
 
   .article-header {

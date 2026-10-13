@@ -19,6 +19,8 @@ import compress from 'astro-compress';
 import { remarkMermaid } from './src/plugins/remark-mermaid';
 import { remarkGithubAlerts } from './src/plugins/remark-github-alerts';
 import { remarkSubSuper } from './src/plugins/remark-sub-super';
+import { rehypeVideo } from './src/plugins/rehype-video';
+import { viteVideoAssets } from './src/plugins/vite-video-assets';
 
 const siteUrl = process.env.SITE_URL?.trim() || 'https://ice11123.github.io';
 const basePath = process.env.SITE_BASE?.trim() || '/GUET_428';
@@ -69,6 +71,7 @@ export default defineConfig({
         [rehypeKatex, { output: 'html' }],
         rehypeSlug,
         rehypeAutolinkHeadings,
+        [rehypeVideo, { base: redirectBasePath }],
       ],
       remarkRehype: {
         handlers: defListHastHandlers,
@@ -78,6 +81,6 @@ export default defineConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), viteVideoAssets()],
   },
 });

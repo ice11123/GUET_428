@@ -24,6 +24,15 @@ pnpm run build
 
 文章 frontmatter 可填写 `author` 与 `sourceUrl`。现有文章作者统一为“离子怪”，文章页作者名会链接到其个人博客；未填写作者时继续使用实验室名称。
 
+文章内插入视频使用独立一行的 `::video[相对路径]`，路径相对文章文件本身，视频随构建打包并自动带上站点子路径：
+
+```markdown
+::video[vid1.mp4]
+::video[vid1.mp4]{poster=封面.webp, loop, muted, class=hero-video}
+```
+
+布尔属性为 `loop`、`muted`、`autoplay`、`controls`、`playsinline`，键值属性为 `poster`、`title`、`class`、`width`、`height`、`preload`；视频扩展名限 `.mp4`、`.webm`、`.ogg`、`.mov`。文件缺失或属性写错会直接中断构建。
+
 ## 站点结构
 
 - `src/consts.ts`：实验室名称、站点地址和仓库配置
