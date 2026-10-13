@@ -139,7 +139,7 @@ test('实验室身份替代个人元素，亮色主题采用浅蓝底并保留�
   assert.match(constants, /428强弱电综合实验室/);
   assert.match(constants, /桂林电子科技大学/);
   assert.match(constants, /电气工程及其自动化/);
-  assert.match(home, /lab-hero\.png/);
+  assert.match(home, /lab-hero\.webp/);
   assert.doesNotMatch(home, /GitHubContributions|GitHubLanguages|PERSONAL NOTES|离子怪/);
   assert.doesNotMatch(header, /SocialLinks/);
   assert.match(lightTheme, /--background:\s*#eef6ff/);
@@ -462,7 +462,7 @@ test('四个实验室分组共享顺序、固定路由和受控管理台输入',
   assert.match(contentConfig, /z\.enum\(LAB_GROUPS\)/);
   assert.match(admin, /<select name="dir1" required>/);
   assert.match(showcase, /slice\(0, 2\)/);
-  assert.match(showcase, /电源组\.png[\s\S]*飞控组\.png[\s\S]*小车组\.png/);
+  assert.match(showcase, /电源组\.webp[\s\S]*飞控组\.webp[\s\S]*小车组\.webp/);
   assert.doesNotMatch(showcase, /assets\/groups\/小车\.png/);
   assert.match(showcase, /format: 'avif'/);
   assert.match(showcase, /format: 'webp'/);
@@ -570,7 +570,7 @@ test('实验室文章目录复用三组响应式素材并保持紧凑文章行',
   const groupHeader = readSource('components/blog/DirectoryGroupHeader.astro');
   const postRow = readSource('components/blog/DirectoryPostRow.astro');
 
-  assert.match(list, /电源组\.png[\s\S]*飞控组\.png[\s\S]*小车组\.png/);
+  assert.match(list, /电源组\.webp[\s\S]*飞控组\.webp[\s\S]*小车组\.webp/);
   assert.match(list, /data-group=\{presentation\.variant\}/);
   assert.match(groupHeader, /format: 'avif'/);
   assert.match(groupHeader, /format: 'webp'/);
