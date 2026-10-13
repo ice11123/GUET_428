@@ -2,8 +2,8 @@
 title: "nano 接收机配对字配置"
 description: "记录 nano 接收机 WebUI 中配对字（Binding Phrase）、串口协议与失效保护的实际取值，供装机对频时对照。"
 pubDate: 2026-09-18T09:00:00+08:00
-author: "离子怪"
 dir1: "飞控组"
+dir2: "代码相关解析"
 tags: ["遥控链路", "ExpressLRS", "接收机", "SBUS"]
 ---
 
