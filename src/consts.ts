@@ -3,9 +3,8 @@ import { LAB_GROUPS } from './config/labGroups.ts';
 export { LAB_GROUPS } from './config/labGroups.ts';
 
 export const LAB_NAME = '428强弱电综合实验室';
-export const INSTITUTION_NAME = '桂林电子科技大学';
 export const PROGRAM_NAME = '电气工程及其自动化';
-export const SITE_TITLE = `${LAB_NAME}-${INSTITUTION_NAME}-${PROGRAM_NAME}`;
+export const SITE_TITLE = `${LAB_NAME}-${PROGRAM_NAME}`;
 export const SITE_DESCRIPTION = '面向实验室师生发布文章、项目资料与维护记录。';
 export const SITE_AUTHOR = LAB_NAME;
 export const SITE_START_DATE = new Date('2026-09-03');

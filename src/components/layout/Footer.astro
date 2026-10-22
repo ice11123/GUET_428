@@ -1,12 +1,12 @@
 ---
 const today = new Date();
-import { LAB_NAME, INSTITUTION_NAME } from '../../consts';
+import { LAB_NAME } from '../../consts';
 import { withBase } from '../../lib/urls';
 ---
 
 <footer>
 	&copy; {today.getFullYear()}
-	<a href={withBase('/about/')}>{LAB_NAME}</a> · {INSTITUTION_NAME}。
+	<a href={withBase('/about/')}>{LAB_NAME}</a>。
 	All rights reserved.
 	Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
 </footer>

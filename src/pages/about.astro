@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import { INSTITUTION_NAME, LAB_NAME, PROGRAM_NAME, SITE_DESCRIPTION, SITE_START_DATE, SITE_TITLE } from '../consts';
+import { LAB_NAME, PROGRAM_NAME, SITE_DESCRIPTION, SITE_START_DATE, SITE_TITLE } from '../consts';
 import { fmtNum } from '../consts';
 import Layout from '../layouts/PublicContentLayout.astro';
 import JsonLd from '../components/blog/JsonLd.astro';
@@ -21,10 +21,6 @@ const aboutPageLd = {
   mainEntity: {
     '@type': 'Organization',
     name: LAB_NAME,
-    parentOrganization: {
-      '@type': 'CollegeOrUniversity',
-      name: INSTITUTION_NAME,
-    },
   },
 };
 ---
@@ -39,7 +35,7 @@ const aboutPageLd = {
   <JsonLd slot="head" data={aboutPageLd} />
 
   <h2>关于实验室</h2>
-  <p><strong>{LAB_NAME}</strong>隶属于{INSTITUTION_NAME}{PROGRAM_NAME}专业。</p>
+  <p><strong>{LAB_NAME}</strong> · 专业方向：{PROGRAM_NAME}。</p>
   <p>{SITE_DESCRIPTION}</p>
 
   <h2>关于本站</h2>

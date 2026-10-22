@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { getImage } from 'astro:assets';
-import { INSTITUTION_NAME, LAB_NAME, PROGRAM_NAME, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { LAB_NAME, PROGRAM_NAME, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { parseMaintenance } from '../lib/maintenance';
 import PublicLayout from '../layouts/PublicLayout.astro';
 import JsonLd from '../components/blog/JsonLd.astro';
@@ -124,7 +124,7 @@ const recentMaintenanceEntries = maintenanceEntries.slice(0, 3);
       <div class="cover-copy">
         <p class="home-eyebrow">GUET · ELECTRICAL ENGINEERING LAB</p>
         <h1 id="home-title">{LAB_NAME}</h1>
-        <p>{INSTITUTION_NAME} · {PROGRAM_NAME}</p>
+        <p>{PROGRAM_NAME}</p>
       </div>
       <span class="sr-only" id="home-cover-description">展开后完整展示主页壁纸，可点击箭头、使用桌面滚轮、按 Escape 或向下滑动收回。</span>
       <div class="cover-gesture-zone" data-home-cover-gesture aria-hidden="true"></div>

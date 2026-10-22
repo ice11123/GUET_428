@@ -27,7 +27,8 @@ test('仓库维护记录包含已核实的近期公告', async () => {
   const maintenancePath = fileURLToPath(new URL('../content/maintenance.md', import.meta.url));
   const entries = await parseMaintenance(readFileSync(maintenancePath, 'utf8'));
 
-  assert.deepEqual(entries.slice(0, 6).map((entry) => entry.title), [
+  assert.deepEqual(entries.slice(0, 7).map((entry) => entry.title), [
+    '站点标识文字调整',
     '同步近期阅读与导航优化',
     '个人博客友链说明更新',
     '三级目录层级与折叠交互优化',

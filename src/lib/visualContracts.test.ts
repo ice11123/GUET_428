@@ -137,7 +137,7 @@ test('实验室身份替代个人元素，亮色主题采用浅蓝底并保留�
   const lightTheme = readSource('styles/themes/light-blue.css');
 
   assert.match(constants, /428强弱电综合实验室/);
-  assert.match(constants, /桂林电子科技大学/);
+  assert.doesNotMatch(constants, /INSTITUTION_NAME/);
   assert.match(constants, /电气工程及其自动化/);
   assert.match(home, /lab-hero\.webp/);
   assert.doesNotMatch(home, /GitHubContributions|GitHubLanguages|PERSONAL NOTES|离子怪/);
